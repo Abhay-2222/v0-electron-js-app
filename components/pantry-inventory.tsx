@@ -130,7 +130,7 @@ export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
           <CardTitle className="text-xl sm:text-2xl">Pantry</CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" aria-label="Add pantry item">
+              <Button size="sm" className="rounded-xl shadow-sm" aria-label="Add pantry item">
                 <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add Item
               </Button>

@@ -115,8 +115,8 @@ export function WeeklyPlanner({
   const hasMeals = Object.keys(mealPlan).length > 0
 
   return (
-    <div className="space-y-5">
-      <div className="mb-5">
+    <div className="space-y-4">
+      <div>
         <BudgetTracker actualSpending={actualSpending} weeklyBudget={weeklyBudget} onBudgetChange={onBudgetChange} />
       </div>
 
@@ -168,7 +168,7 @@ export function WeeklyPlanner({
                 <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-56">
               {!isCurrentWeek && (
                 <>
                   <DropdownMenuItem onClick={goToCurrentWeek}>
@@ -308,7 +308,7 @@ export function WeeklyPlanner({
             })}
           </div>
 
-          <div className="mt-5">
+          <div>
             <DailyNutrition mealPlan={mealPlan} currentDay={currentDay} />
           </div>
         </>

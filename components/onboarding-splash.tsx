@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft } from "lucide-react"
 import Image from "next/image"
@@ -35,6 +37,9 @@ interface OnboardingSplashProps {
 
 export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
   const [currentScreen, setCurrentScreen] = useState(0)
+  const touchStartX = useRef<number | null>(null)
+  const touchEndX = useRef<number | null>(null)
+  const minSwipeDistance = 50
 
   const handleNext = () => {
     if (currentScreen < splashScreens.length - 1) {
@@ -50,10 +55,39 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
     }
   }
 
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchEndX.current = null
+    touchStartX.current = e.targetTouches[0].clientX
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStartX.current || !touchEndX.current) return
+
+    const distance = touchStartX.current - touchEndX.current
+    const isLeftSwipe = distance > minSwipeDistance
+    const isRightSwipe = distance < -minSwipeDistance
+
+    if (isLeftSwipe && currentScreen < splashScreens.length - 1) {
+      handleNext()
+    }
+    if (isRightSwipe && currentScreen > 0) {
+      handleBack()
+    }
+  }
+
   const currentSplash = splashScreens[currentScreen]
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+    <div
+      className="fixed inset-0 z-50 bg-background flex flex-col"
+      onTouchStart={onTouchStart}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onTouchEnd}
+    >
       {/* Header with Back button */}
       <div className="container mx-auto px-4 py-3">
         {currentScreen > 0 && (
@@ -93,13 +127,13 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
 
       {/* Footer with pagination and button */}
       <div className="container mx-auto px-6 pb-8 space-y-6">
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-1.5">
           {splashScreens.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentScreen(index)}
-              className={`h-2 w-2 rounded-full transition-all duration-300 ${
-                index === currentScreen ? "bg-primary w-6" : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                index === currentScreen ? "bg-primary w-4" : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5"
               }`}
               aria-label={`Go to screen ${index + 1}`}
               aria-current={index === currentScreen ? "true" : "false"}

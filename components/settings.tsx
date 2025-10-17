@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { User, Palette, Database, Info, Mail, BarChart3, History } from "lucide-react"
 import { useState, useMemo } from "react"
 import type { WeeklyMealPlans } from "@/lib/types"
+import { useToast } from "@/hooks/use-toast"
 
 interface SettingsProps {
   highContrast: boolean
@@ -30,6 +31,22 @@ export function Settings({
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
+  const [savedProfile, setSavedProfile] = useState({ fullName: "", email: "", phone: "", bio: "" })
+  const { toast } = useToast()
+
+  const handleSaveProfile = () => {
+    setSavedProfile({ fullName, email, phone, bio })
+    toast({
+      title: "Profile saved",
+      description: "Your profile changes have been saved successfully.",
+    })
+  }
+
+  const hasUnsavedChanges =
+    fullName !== savedProfile.fullName ||
+    email !== savedProfile.email ||
+    phone !== savedProfile.phone ||
+    bio !== savedProfile.bio
 
   const analytics = useMemo(() => {
     const weeks = Object.keys(allMealPlans).sort().reverse().slice(0, 4)
@@ -162,7 +179,9 @@ export function Settings({
             />
           </div>
 
-          <Button className="w-full h-9 text-sm">Save Profile Changes</Button>
+          <Button className="w-full h-9 text-sm" onClick={handleSaveProfile} disabled={!hasUnsavedChanges}>
+            Save Profile Changes
+          </Button>
         </CardContent>
       </Card>
 

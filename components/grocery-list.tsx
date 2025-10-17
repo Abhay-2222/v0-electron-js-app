@@ -10,6 +10,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Progress } from "@/components/ui/progress"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { calculateIngredientCost } from "@/lib/ingredient-prices"
+import { useToast } from "@/hooks/use-toast" // Import useToast hook
 
 interface GroceryListProps {
   mealPlan: MealPlan
@@ -23,6 +24,7 @@ interface ConsolidatedIngredient extends Ingredient {
 
 export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
   const [checkedItems, setCheckedItems] = useLocalStorage<Set<string>>("grocery-checked-items", new Set())
+  const { toast } = useToast() // Declare useToast hook
 
   const groceryList = useMemo(() => {
     const ingredientMap = new Map<string, ConsolidatedIngredient>()
@@ -135,9 +137,14 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
   if (totalItems === 0) {
     return (
       <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30">
+        <CardHeader>
+          <CardTitle className="text-xl sm:text-2xl">Grocery</CardTitle>
+        </CardHeader>
         <CardContent className="py-16 text-center text-muted-foreground">
           <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" aria-hidden="true" />
-          <p className="text-base px-4">Add recipes to your meal plan to generate a grocery list</p>
+          <p className="text-base px-4">
+            Plan your meals in the Planner tab to automatically generate your grocery list
+          </p>
         </CardContent>
       </Card>
     )
@@ -147,7 +154,7 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30 w-full">
       <CardHeader className="pb-5 space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-xl sm:text-2xl">Groceries</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl">Grocery</CardTitle>
           <div className="flex gap-1.5 sm:gap-2 shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -205,6 +212,27 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
             aria-label={`${Math.round(completionPercentage)}% complete`}
           />
         </div>
+        {/* 
+        <Button
+          onClick={handleOrderInstacart}
+          disabled={isOrderingInstacart}
+          className="w-full rounded-xl bg-[#0AAD0A] hover:bg-[#099209] text-white shadow-md"
+          size="lg"
+        >
+          {isOrderingInstacart ? (
+            <>
+              <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Creating Order...
+            </>
+          ) : (
+            <>
+              <ShoppingCart className="h-4 w-4 mr-2" aria-hidden="true" />
+              Order on Instacart
+              <ExternalLink className="h-3.5 w-3.5 ml-2" aria-hidden="true" />
+            </>
+          )}
+        </Button>
+        */}
       </CardHeader>
       <CardContent className="space-y-6" role="region" aria-label="Grocery items by category">
         {groceryList.map((group) => (
