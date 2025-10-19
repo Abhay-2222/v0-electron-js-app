@@ -1,11 +1,11 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { MealPlan, Ingredient, PantryItem } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShoppingCart, Download, Share2, MessageCircle, Mail } from "lucide-react"
+import { ShoppingCart, Download, Share2, MessageCircle, Mail, ExternalLink } from "lucide-react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Progress } from "@/components/ui/progress"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -24,6 +24,7 @@ interface ConsolidatedIngredient extends Ingredient {
 
 export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
   const [checkedItems, setCheckedItems] = useLocalStorage<Set<string>>("grocery-checked-items", new Set())
+  const [isOrderingInstacart, setIsOrderingInstacart] = useState(false)
   const { toast } = useToast() // Declare useToast hook
 
   const groceryList = useMemo(() => {
@@ -126,6 +127,57 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     }
   }
 
+  const handleOrderInstacart = async () => {
+    setIsOrderingInstacart(true)
+    try {
+      const uncheckedItems = groceryList.flatMap((group) =>
+        group.items
+          .filter((item) => !checkedItems.has(item.id))
+          .map((item) => ({
+            name: item.name,
+            quantity: item.amount,
+            unit: item.unit,
+          })),
+      )
+
+      if (uncheckedItems.length === 0) {
+        toast({
+          title: "No items to order",
+          description: "All items are already checked off!",
+        })
+        setIsOrderingInstacart(false)
+        return
+      }
+
+      const response = await fetch("/api/instacart/create-list", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: uncheckedItems }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to create Instacart list")
+      }
+
+      const data = await response.json()
+      window.open(data.url, "_blank")
+
+      toast({
+        title: "Opening Instacart",
+        description: "Your grocery list has been sent to Instacart!",
+      })
+    } catch (error) {
+      console.error("Instacart order error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create Instacart order. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsOrderingInstacart(false)
+    }
+  }
+
   const totalItems = groceryList.reduce((sum, group) => sum + group.items.length, 0)
   const checkedCount = checkedItems.size
   const completionPercentage = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0
@@ -212,7 +264,6 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
             aria-label={`${Math.round(completionPercentage)}% complete`}
           />
         </div>
-        {/* 
         <Button
           onClick={handleOrderInstacart}
           disabled={isOrderingInstacart}
@@ -232,7 +283,6 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
             </>
           )}
         </Button>
-        */}
       </CardHeader>
       <CardContent className="space-y-6" role="region" aria-label="Grocery items by category">
         {groceryList.map((group) => (

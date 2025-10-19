@@ -17,7 +17,7 @@ interface RecipeCardProps {
 export function RecipeCard({ recipe, onDragStart, draggable = false }: RecipeCardProps) {
   return (
     <Card
-      className="cursor-grab active:cursor-grabbing hover:shadow-lg transition-shadow"
+      className="cursor-grab active:cursor-grabbing hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-scale-in"
       draggable={draggable}
       onDragStart={(e) => onDragStart?.(e, recipe)}
     >
@@ -27,7 +27,7 @@ export function RecipeCard({ recipe, onDragStart, draggable = false }: RecipeCar
             src={recipe.image || "/placeholder.svg?height=200&width=300"}
             alt={recipe.name}
             fill
-            className="object-cover"
+            className="object-cover transition-transform duration-500 hover:scale-110"
           />
         </div>
       </CardHeader>

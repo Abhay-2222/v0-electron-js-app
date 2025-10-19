@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { PantryItem } from "@/lib/types"
+import type { PantryItem, DynamicIngredient } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -18,9 +18,10 @@ import { cn } from "@/lib/utils"
 
 interface PantryInventoryProps {
   onPantryChange?: (items: PantryItem[]) => void
+  availableIngredients?: DynamicIngredient[]
 }
 
-export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
+export function PantryInventory({ onPantryChange, availableIngredients }: PantryInventoryProps) {
   const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("pantry-inventory", [])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -34,14 +35,20 @@ export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
     lowStockThreshold: "",
   })
 
-  const availableIngredients = Object.keys(ingredientPrices).map((key) => ({
-    value: key,
-    label: key.charAt(0).toUpperCase() + key.slice(1),
-    unit: ingredientPrices[key].unit,
-  }))
+  const ingredientsList =
+    availableIngredients ||
+    Object.keys(ingredientPrices).map((key) => ({
+      value: key,
+      label: key.charAt(0).toUpperCase() + key.slice(1),
+      unit: ingredientPrices[key].unit,
+      pricePerUnit: ingredientPrices[key].pricePerUnit,
+    }))
+
+  console.log("[v0] Pantry: Available ingredients count:", ingredientsList.length)
+  console.log("[v0] Pantry: Using", availableIngredients ? "dynamic" : "static", "ingredients")
 
   const handleIngredientSelect = (ingredientKey: string) => {
-    const ingredient = availableIngredients.find((i) => i.value === ingredientKey)
+    const ingredient = ingredientsList.find((i) => i.value === ingredientKey)
     if (ingredient) {
       setNewItem({
         ...newItem,
@@ -160,7 +167,7 @@ export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
                         <CommandList>
                           <CommandEmpty>No ingredient found.</CommandEmpty>
                           <CommandGroup>
-                            {availableIngredients.map((ingredient) => (
+                            {ingredientsList.map((ingredient) => (
                               <CommandItem
                                 key={ingredient.value}
                                 value={ingredient.value}

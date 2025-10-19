@@ -4,114 +4,114 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Base colors - warm cream/beige backgrounds */
-  --background: oklch(0.98 0.01 85);
-  --foreground: oklch(0.2 0.01 85);
+  /* Updated to more sophisticated, premium color palette */
+  /* Base colors - Pure white with subtle warmth */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.15 0.005 85);
 
-  /* Card and surface colors - soft white with warmth */
+  /* Card and surface colors - Elevated white surfaces */
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.01 85);
+  --card-foreground: oklch(0.15 0.005 85);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.01 85);
+  --popover-foreground: oklch(0.15 0.005 85);
 
-  /* Primary - Fresh sage green for healthy food aesthetic */
-  --primary: oklch(0.65 0.12 145);
+  /* Primary - Sophisticated sage green */
+  --primary: oklch(0.55 0.08 150);
   --primary-foreground: oklch(1 0 0);
 
-  /* Secondary - Warm terracotta/coral accent */
-  --secondary: oklch(0.75 0.08 45);
-  --secondary-foreground: oklch(0.15 0.01 45);
+  /* Secondary - Warm neutral */
+  --secondary: oklch(0.45 0.02 85);
+  --secondary-foreground: oklch(1 0 0);
 
-  /* Muted - Very light warm gray */
-  --muted: oklch(0.96 0.01 85);
+  /* Muted - Very light gray with warmth */
+  --muted: oklch(0.97 0.005 85);
   --muted-foreground: oklch(0.5 0.01 85);
 
-  /* Accent - Soft peach for highlights */
-  --accent: oklch(0.92 0.04 55);
-  --accent-foreground: oklch(0.25 0.01 55);
+  /* Accent - Soft peach */
+  --accent: oklch(0.95 0.02 55);
+  --accent-foreground: oklch(0.2 0.01 55);
 
-  /* Destructive - Muted red */
-  --destructive: oklch(0.55 0.18 25);
+  /* Destructive - Refined red */
+  --destructive: oklch(0.5 0.15 25);
   --destructive-foreground: oklch(1 0 0);
 
   /* Info - Soft blue */
-  --info: oklch(0.6 0.12 240);
+  --info: oklch(0.55 0.1 240);
   --info-foreground: oklch(1 0 0);
 
   /* Success - Matches primary green */
-  --success: oklch(0.65 0.12 145);
+  --success: oklch(0.55 0.08 150);
   --success-foreground: oklch(1 0 0);
 
   /* Warning - Warm amber */
-  --warning: oklch(0.75 0.12 65);
-  --warning-foreground: oklch(0.15 0.01 65);
+  --warning: oklch(0.7 0.1 65);
+  --warning-foreground: oklch(0.1 0.01 65);
 
-  /* Border - Very subtle warm gray */
-  --border: oklch(0.92 0.01 85);
-  --input: oklch(0.98 0.01 85);
-  --ring: oklch(0.65 0.12 145);
+  /* Border - Ultra subtle */
+  --border: oklch(0.94 0.005 85);
+  --input: oklch(0.98 0.005 85);
+  --ring: oklch(0.55 0.08 150);
 
-  /* Chart colors - harmonious palette */
-  --chart-1: oklch(0.65 0.12 145);
-  --chart-2: oklch(0.75 0.08 45);
-  --chart-3: oklch(0.6 0.12 240);
-  --chart-4: oklch(0.75 0.12 65);
-  --chart-5: oklch(0.7 0.1 300);
+  /* Chart colors */
+  --chart-1: oklch(0.55 0.08 150);
+  --chart-2: oklch(0.7 0.08 45);
+  --chart-3: oklch(0.55 0.1 240);
+  --chart-4: oklch(0.7 0.1 65);
+  --chart-5: oklch(0.65 0.08 300);
 
-  /* Radius - more rounded for modern aesthetic */
-  --radius: 1rem;
+  /* Increased radius for more modern, softer aesthetic */
+  --radius: 1.25rem;
 
   /* Sidebar colors */
-  --sidebar: oklch(0.99 0.01 85);
-  --sidebar-foreground: oklch(0.2 0.01 85);
-  --sidebar-primary: oklch(0.65 0.12 145);
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.15 0.005 85);
+  --sidebar-primary: oklch(0.55 0.08 150);
   --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0.01 85);
-  --sidebar-accent-foreground: oklch(0.25 0.01 85);
-  --sidebar-border: oklch(0.92 0.01 85);
-  --sidebar-ring: oklch(0.65 0.12 145);
+  --sidebar-accent: oklch(0.97 0.005 85);
+  --sidebar-accent-foreground: oklch(0.2 0.01 55);
+  --sidebar-border: oklch(0.94 0.005 85);
+  --sidebar-ring: oklch(0.55 0.08 150);
 }
 
 .dark {
-  /* Dark mode with warm, sophisticated tones */
-  --background: oklch(0.18 0.01 85);
-  --foreground: oklch(0.95 0.01 85);
-  --card: oklch(0.22 0.01 85);
-  --card-foreground: oklch(0.95 0.01 85);
-  --popover: oklch(0.22 0.01 85);
-  --popover-foreground: oklch(0.95 0.01 85);
-  --primary: oklch(0.7 0.12 145);
-  --primary-foreground: oklch(0.15 0.01 145);
-  --secondary: oklch(0.7 0.08 45);
-  --secondary-foreground: oklch(0.95 0.01 45);
-  --muted: oklch(0.28 0.01 85);
-  --muted-foreground: oklch(0.65 0.01 85);
-  --accent: oklch(0.35 0.04 55);
-  --accent-foreground: oklch(0.95 0.01 55);
-  --destructive: oklch(0.6 0.18 25);
+  --background: oklch(0.12 0.005 85);
+  --foreground: oklch(0.98 0.005 85);
+  --card: oklch(0.16 0.005 85);
+  --card-foreground: oklch(0.98 0.005 85);
+  --popover: oklch(0.16 0.005 85);
+  --popover-foreground: oklch(0.98 0.005 85);
+  --primary: oklch(0.65 0.08 150);
+  --primary-foreground: oklch(0.1 0.005 150);
+  --secondary: oklch(0.55 0.02 85);
+  --secondary-foreground: oklch(0.98 0.005 85);
+  --muted: oklch(0.22 0.005 85);
+  --muted-foreground: oklch(0.7 0.01 85);
+  --accent: oklch(0.28 0.02 55);
+  --accent-foreground: oklch(0.98 0.01 55);
+  --destructive: oklch(0.55 0.15 25);
   --destructive-foreground: oklch(1 0 0);
-  --info: oklch(0.65 0.12 240);
+  --info: oklch(0.6 0.1 240);
   --info-foreground: oklch(1 0 0);
-  --success: oklch(0.7 0.12 145);
-  --success-foreground: oklch(0.15 0.01 145);
-  --warning: oklch(0.75 0.12 65);
-  --warning-foreground: oklch(0.15 0.01 65);
-  --border: oklch(0.3 0.01 85);
-  --input: oklch(0.25 0.01 85);
-  --ring: oklch(0.7 0.12 145);
-  --chart-1: oklch(0.7 0.12 145);
+  --success: oklch(0.65 0.08 150);
+  --success-foreground: oklch(0.1 0.005 150);
+  --warning: oklch(0.7 0.1 65);
+  --warning-foreground: oklch(0.1 0.01 65);
+  --border: oklch(0.25 0.005 85);
+  --input: oklch(0.2 0.005 85);
+  --ring: oklch(0.65 0.08 150);
+  --chart-1: oklch(0.65 0.08 150);
   --chart-2: oklch(0.7 0.08 45);
-  --chart-3: oklch(0.65 0.12 240);
-  --chart-4: oklch(0.75 0.12 65);
-  --chart-5: oklch(0.7 0.1 300);
-  --sidebar: oklch(0.22 0.01 85);
-  --sidebar-foreground: oklch(0.95 0.01 85);
-  --sidebar-primary: oklch(0.7 0.12 145);
-  --sidebar-primary-foreground: oklch(0.15 0.01 145);
-  --sidebar-accent: oklch(0.28 0.01 85);
-  --sidebar-accent-foreground: oklch(0.95 0.01 85);
-  --sidebar-border: oklch(0.3 0.01 85);
-  --sidebar-ring: oklch(0.7 0.12 145);
+  --chart-3: oklch(0.6 0.1 240);
+  --chart-4: oklch(0.7 0.1 65);
+  --chart-5: oklch(0.65 0.08 300);
+  --sidebar: oklch(0.16 0.005 85);
+  --sidebar-foreground: oklch(0.98 0.005 85);
+  --sidebar-primary: oklch(0.65 0.08 150);
+  --sidebar-primary-foreground: oklch(0.1 0.005 150);
+  --sidebar-accent: oklch(0.22 0.005 85);
+  --sidebar-accent-foreground: oklch(0.98 0.005 85);
+  --sidebar-border: oklch(0.25 0.005 85);
+  --sidebar-ring: oklch(0.65 0.08 150);
 }
 
 .high-contrast {
@@ -171,9 +171,9 @@
 }
 
 @theme inline {
-  /* Updated to SF Pro Display system font */
-  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  /* Updated to SF Pro font family */
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  --font-mono: "SF Mono", "Geist Mono", monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -230,32 +230,37 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    /* Added SF Pro font features */
     font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
     overflow-y: auto;
     min-height: 100%;
+    background-image: radial-gradient(circle at 1px 1px, oklch(0.96 0.005 85) 1px, transparent 0);
+    background-size: 40px 40px;
   }
 
   *:focus-visible {
     @apply outline-2 outline-offset-2 outline-ring;
   }
 
-  /* Removed all bold font weights, using normal weight throughout */
+  /* Refined typography with better hierarchy and spacing */
   h1 {
-    font-size: 1.875rem;
-    font-weight: 400;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
   }
 
   @media (min-width: 768px) {
     h1 {
-      font-size: 2.25rem;
+      font-size: 2.5rem;
     }
   }
 
   h2 {
     @apply text-xl tracking-tight leading-tight;
-    font-weight: 400;
+    font-weight: 600;
   }
 
   @media (min-width: 768px) {
@@ -266,7 +271,7 @@
 
   h3 {
     @apply text-lg leading-tight;
-    font-weight: 400;
+    font-weight: 600;
   }
 
   @media (min-width: 768px) {
@@ -277,19 +282,33 @@
 
   p {
     @apply text-base leading-relaxed;
+    font-weight: 400;
   }
 
   label,
   .label {
     @apply text-sm leading-normal;
-    font-weight: 400;
+    font-weight: 500;
   }
 
+  /* Enhanced button and interactive element transitions with animations */
   button,
   a,
   [role="button"],
   [role="tab"] {
     @apply transition-all duration-300 ease-out;
+  }
+
+  button:hover,
+  a[role="button"]:hover,
+  [role="tab"]:hover {
+    transform: translateY(-1px);
+  }
+
+  button:active,
+  a[role="button"]:active,
+  [role="tab"]:active {
+    transform: scale(0.97);
   }
 
   button,
@@ -308,34 +327,41 @@
     display: none;
   }
 
+  /* Updated spacing utilities for better consistency */
   .spacing-xs {
-    @apply gap-2;
-  }
-  .spacing-sm {
     @apply gap-3;
   }
-  .spacing-md {
+  .spacing-sm {
     @apply gap-4;
   }
-  .spacing-lg {
+  .spacing-md {
     @apply gap-6;
   }
-  .spacing-xl {
+  .spacing-lg {
     @apply gap-8;
   }
-
-  /* Enhanced card styling for modern aesthetic */
-  .card-elevated {
-    @apply shadow-sm hover:shadow-lg transition-all duration-300;
+  .spacing-xl {
+    @apply gap-12;
   }
 
+  /* Fixed card-elevated to use standard CSS instead of @apply with arbitrary values */
+  .card-elevated {
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.06), 0 4px 16px -4px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+  }
+
+  .card-elevated:hover {
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08), 0 8px 32px -8px rgba(0, 0, 0, 0.06);
+  }
+
+  /* Smoother, more refined animations */
   .animate-slide-up {
-    animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes slide-up {
     from {
-      transform: translateY(24px);
+      transform: translateY(16px);
       opacity: 0;
     }
     to {
@@ -356,25 +382,40 @@
     }
   }
 
-  /* Slowed down animation and ensured it's smooth */
   .animate-gradient-shift {
-    animation: gradient-shift 10s ease-in-out infinite;
+    animation: gradient-shift 12s ease-in-out infinite;
   }
 
-  /* New utility classes for aesthetic design */
+  /* Enhanced glass effect for modern UI */
   .glass-effect {
-    @apply backdrop-blur-xl bg-card/80 border border-border/50;
+    @apply backdrop-blur-2xl bg-card/90 border border-border/30;
   }
 
   .soft-shadow {
-    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 4px 16px -4px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.06), 0 4px 16px -4px rgba(0, 0, 0, 0.04);
   }
 
   .soft-shadow-lg {
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1), 0 8px 32px -8px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.08), 0 8px 32px -8px rgba(0, 0, 0, 0.06);
   }
 
-  /* Added animations for splash screen */
+  /* Added premium micro-interactions */
+  .hover-lift {
+    @apply transition-all duration-300;
+  }
+
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+
+  .hover-scale {
+    @apply transition-transform duration-200;
+  }
+
+  .hover-scale:hover {
+    transform: scale(1.02);
+  }
+
   @keyframes fade-in {
     from {
       opacity: 0;
@@ -386,7 +427,7 @@
 
   @keyframes scale-in {
     from {
-      transform: scale(0.8);
+      transform: scale(0.95);
       opacity: 0;
     }
     to {
@@ -397,7 +438,7 @@
 
   @keyframes slide-up-delayed {
     from {
-      transform: translateY(16px);
+      transform: translateY(12px);
       opacity: 0;
     }
     to {
@@ -407,14 +448,100 @@
   }
 
   .animate-fade-in {
-    animation: fade-in 1s ease-out;
+    animation: fade-in 0.6s ease-out;
   }
 
   .animate-scale-in {
-    animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: scale-in 0.8s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .animate-slide-up-delayed {
-    animation: slide-up-delayed 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    animation: slide-up-delayed 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  }
+
+  /* Added premium gradient backgrounds */
+  .gradient-primary {
+    background: linear-gradient(135deg, oklch(0.55 0.08 150) 0%, oklch(0.6 0.08 160) 100%);
+  }
+
+  .gradient-card {
+    background: linear-gradient(135deg, oklch(1 0 0) 0%, oklch(0.99 0.005 85) 100%);
+  }
+
+  /* Added stagger animation delays for list items */
+  .animate-stagger-1 {
+    animation-delay: 0.05s;
+  }
+
+  .animate-stagger-2 {
+    animation-delay: 0.1s;
+  }
+
+  .animate-stagger-3 {
+    animation-delay: 0.15s;
+  }
+
+  .animate-stagger-4 {
+    animation-delay: 0.2s;
+  }
+
+  .animate-stagger-5 {
+    animation-delay: 0.25s;
+  }
+
+  .animate-stagger-6 {
+    animation-delay: 0.3s;
+  }
+
+  .animate-stagger-7 {
+    animation-delay: 0.35s;
+  }
+
+  /* Added bounce animation for interactive elements */
+  @keyframes bounce-subtle {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  .animate-bounce-subtle {
+    animation: bounce-subtle 0.6s ease-in-out;
+  }
+
+  /* Added pulse animation for notifications */
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(var(--primary), 0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(var(--primary), 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(var(--primary), 0);
+    }
+  }
+
+  .animate-pulse-ring {
+    animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Added shimmer loading animation */
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+
+  .animate-shimmer {
+    animation: shimmer 2s infinite linear;
+    background: linear-gradient(to right, transparent 0%, rgba(255, 255, 255, 0.3) 50%, transparent 100%);
+    background-size: 1000px 100%;
   }
 }

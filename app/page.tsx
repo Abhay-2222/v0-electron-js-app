@@ -35,11 +35,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { calculateGroceryListCost } from "@/lib/meal-utils"
+import { useDynamicIngredients } from "@/hooks/use-dynamic-ingredients"
 
 type AppState = "initial-splash" | "auth" | "onboarding" | "main"
 
 export default function MealPlannerPage() {
-  const [recipes] = useState<Recipe[]>(sampleRecipes)
+  const [recipes, setRecipes] = useLocalStorage<Recipe[]>("meal-planner-recipes", sampleRecipes)
   const [allMealPlans, setAllMealPlans] = useLocalStorage<WeeklyMealPlans>("meal-planner-weeks", {})
   const [weeklyBudgets, setWeeklyBudgets] = useLocalStorage<WeeklyBudgets>("weekly-budgets", {})
   const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("pantry-inventory", [])
@@ -52,6 +53,7 @@ export default function MealPlannerPage() {
   const [hasAuthenticated, setHasAuthenticated] = useLocalStorage("authenticated", false)
   const [isClient, setIsClient] = useState(false)
   const [appState, setAppState] = useState<AppState>("initial-splash")
+  const { allIngredients, addIngredientsFromRecipe } = useDynamicIngredients()
 
   useEffect(() => {
     setIsClient(true)
@@ -151,6 +153,24 @@ export default function MealPlannerPage() {
     setAppState("initial-splash")
   }
 
+  const handleAddRecipeToLibrary = (recipe: Recipe) => {
+    console.log("[v0] handleAddRecipeToLibrary called for recipe:", recipe.name)
+    console.log("[v0] Recipe ID:", recipe.id)
+    console.log("[v0] Recipe ingredients:", recipe.ingredients.length)
+
+    addIngredientsFromRecipe(recipe.ingredients)
+    console.log("[v0] Ingredients added to dynamic database")
+
+    // Add recipe to library if it doesn't exist
+    const exists = recipes.some((r) => r.id === recipe.id)
+    if (!exists) {
+      setRecipes([...recipes, recipe])
+      console.log("[v0] Recipe added to library")
+    } else {
+      console.log("[v0] Recipe already exists in library")
+    }
+  }
+
   if (!isClient) {
     return null
   }
@@ -189,12 +209,12 @@ export default function MealPlannerPage() {
 
   return (
     <div className={`min-h-screen bg-background ${highContrast ? "high-contrast" : ""}`}>
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
-        <div className="container mx-auto px-4 py-3">
+      <header className="sticky top-0 z-20 glass-effect border-b border-border/50">
+        <div className="container mx-auto px-5 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
-                <UtensilsCrossed className="h-6 w-6" aria-hidden="true" />
+              <div className="flex items-center justify-center h-11 w-11 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover-scale">
+                <UtensilsCrossed className="h-5 w-5" aria-hidden="true" />
               </div>
             </div>
             <DropdownMenu modal={false}>
@@ -203,28 +223,31 @@ export default function MealPlannerPage() {
                   variant="ghost"
                   size="icon"
                   aria-label="Open menu"
-                  className="rounded-xl h-10 w-10 hover:bg-muted/50 transition-colors"
+                  className="rounded-2xl h-11 w-11 hover:bg-muted/60 transition-all hover-scale"
                 >
                   <MoreVertical className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48" sideOffset={8}>
-                <DropdownMenuLabel>Menu</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-52" sideOffset={12}>
+                <DropdownMenuLabel className="text-sm font-medium">Menu</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setActiveTab("settings")}>
-                  <User className="mr-2 h-4 w-4" />
+                <DropdownMenuItem onClick={() => setActiveTab("settings")} className="cursor-pointer">
+                  <User className="mr-3 h-4 w-4" />
                   Profile
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setHighContrast(!highContrast)}
-                  className={highContrast ? "bg-accent" : ""}
+                  className={`cursor-pointer ${highContrast ? "bg-accent" : ""}`}
                 >
-                  <Contrast className="mr-2 h-4 w-4" />
+                  <Contrast className="mr-3 h-4 w-4" />
                   High Contrast
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive">
-                  <LogOut className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive cursor-pointer"
+                >
+                  <LogOut className="mr-3 h-4 w-4" />
                   Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -233,10 +256,10 @@ export default function MealPlannerPage() {
         </div>
       </header>
 
-      <main className="container mx-auto px-5 sm:px-6 md:px-8 py-4 pb-32 overflow-y-auto">
-        <div className="w-full">
+      <main className="container mx-auto px-5 sm:px-6 md:px-8 py-6 pb-32 overflow-y-auto">
+        <div className="w-full max-w-4xl mx-auto">
           {activeTab === "planner" && (
-            <div className="animate-slide-up">
+            <div className="animate-scale-in">
               <WeeklyPlanner
                 mealPlan={currentMealPlan}
                 onUpdateMealPlan={handleUpdateMealPlan}
@@ -251,25 +274,25 @@ export default function MealPlannerPage() {
           )}
 
           {activeTab === "grocery" && (
-            <div className="animate-slide-up">
+            <div className="animate-scale-in">
               <GroceryList mealPlan={currentMealPlan} pantryItems={pantryItems} />
             </div>
           )}
 
           {activeTab === "pantry" && (
-            <div className="animate-slide-up">
-              <PantryInventory onPantryChange={handlePantryChange} />
+            <div className="animate-scale-in">
+              <PantryInventory onPantryChange={handlePantryChange} availableIngredients={allIngredients} />
             </div>
           )}
 
           {activeTab === "history" && (
-            <div className="animate-slide-up">
+            <div className="animate-scale-in">
               <WeekHistoryView history={weekHistory} onClose={() => setActiveTab("planner")} />
             </div>
           )}
 
           {activeTab === "settings" && (
-            <div className="animate-slide-up">
+            <div className="animate-scale-in">
               <Settings
                 highContrast={highContrast}
                 onHighContrastChange={setHighContrast}
@@ -283,98 +306,98 @@ export default function MealPlannerPage() {
       </main>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80"
+        className="fixed bottom-0 left-0 right-0 z-30 glass-effect border-t border-border/50"
         role="navigation"
         aria-label="Main navigation"
       >
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-around py-2 gap-2">
+          <div className="flex items-center justify-around py-3 gap-2 max-w-md mx-auto">
             <button
               onClick={() => setActiveTab("planner")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
                 activeTab === "planner"
                   ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
               aria-label="Planner"
               aria-current={activeTab === "planner" ? "page" : undefined}
             >
               <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   activeTab === "planner"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                     : "bg-transparent"
                 }`}
               >
                 <Calendar className="h-5 w-5" aria-hidden="true" />
               </div>
-              <span className="text-[11px]">Planner</span>
+              <span className="text-[10px] font-medium tracking-wide">Planner</span>
             </button>
 
             <button
               onClick={() => setActiveTab("grocery")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
                 activeTab === "grocery"
                   ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
               aria-label="Grocery List"
               aria-current={activeTab === "grocery" ? "page" : undefined}
             >
               <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   activeTab === "grocery"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                     : "bg-transparent"
                 }`}
               >
                 <ShoppingCart className="h-5 w-5" aria-hidden="true" />
               </div>
-              <span className="text-[11px]">Grocery</span>
+              <span className="text-[10px] font-medium tracking-wide">Grocery</span>
             </button>
 
             <button
               onClick={() => setActiveTab("pantry")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
                 activeTab === "pantry"
                   ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
               aria-label="Pantry Inventory"
               aria-current={activeTab === "pantry" ? "page" : undefined}
             >
               <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   activeTab === "pantry"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                     : "bg-transparent"
                 }`}
               >
                 <Package className="h-5 w-5" aria-hidden="true" />
               </div>
-              <span className="text-[11px]">Pantry</span>
+              <span className="text-[10px] font-medium tracking-wide">Pantry</span>
             </button>
 
             <button
               onClick={() => setActiveTab("settings")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
+              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
                 activeTab === "settings"
                   ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
               }`}
               aria-label="Settings"
               aria-current={activeTab === "settings" ? "page" : undefined}
             >
               <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
+                className={`p-2.5 rounded-xl transition-all duration-300 ${
                   activeTab === "settings"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
+                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
                     : "bg-transparent"
                 }`}
               >
                 <SettingsIcon className="h-5 w-5" aria-hidden="true" />
               </div>
-              <span className="text-[11px]">Settings</span>
+              <span className="text-[10px] font-medium tracking-wide">Settings</span>
             </button>
           </div>
         </div>
@@ -385,6 +408,7 @@ export default function MealPlannerPage() {
         isOpen={selectorOpen}
         onClose={() => setSelectorOpen(false)}
         onSelectRecipe={handleSelectRecipe}
+        onAddRecipeToLibrary={handleAddRecipeToLibrary}
         currentMeal={selectedSlot ? `${selectedSlot.mealType} for ${selectedSlot.day}` : undefined}
         allMealPlans={allMealPlans}
         weeklyBudget={currentWeekBudget}

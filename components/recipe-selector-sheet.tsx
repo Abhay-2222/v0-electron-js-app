@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import type { Recipe, WeeklyMealPlans } from "@/lib/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -17,6 +17,8 @@ import {
   DollarSign,
   AlertCircle,
   TrendingUp,
+  Globe,
+  Loader2,
 } from "lucide-react"
 import Image from "next/image"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -33,12 +35,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { useToast } from "@/hooks/use-toast"
 
 interface RecipeSelectorSheetProps {
   recipes: Recipe[]
   isOpen: boolean
   onClose: () => void
   onSelectRecipe: (recipe: Recipe) => void
+  onAddRecipeToLibrary?: (recipe: Recipe) => void
   currentMeal?: string
   allMealPlans: WeeklyMealPlans
   weeklyBudget?: number
@@ -49,6 +53,7 @@ export function RecipeSelectorSheet({
   isOpen,
   onClose,
   onSelectRecipe,
+  onAddRecipeToLibrary,
   currentMeal,
   allMealPlans,
   weeklyBudget,
@@ -62,6 +67,12 @@ export function RecipeSelectorSheet({
     recipe: Recipe
     recentInfo: { eaten: boolean; daysAgo?: number }
   } | null>(null)
+  const [isSearchingAPI, setIsSearchingAPI] = useState(false)
+  const [apiRecipes, setApiRecipes] = useState<Recipe[]>([])
+  const [showAPIResults, setShowAPIResults] = useState(false)
+  const [showingSuggestions, setShowingSuggestions] = useState(false)
+  const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null)
+  const { toast } = useToast()
 
   const categories = ["all", ...Array.from(new Set(recipes.map((r) => r.category)))]
   const diets = ["all", "classic", "low-carb", "keto", "flexitarian", "paleo", "vegetarian", "pescatarian", "vegan"]
@@ -75,12 +86,130 @@ export function RecipeSelectorSheet({
     weeklyBudget,
   )
 
-  const filteredRecipes = (showSuggestions ? suggestedRecipes : recipes).filter((recipe) => {
+  const baseRecipes = showAPIResults ? apiRecipes : showSuggestions ? suggestedRecipes : recipes
+
+  const filteredRecipes = baseRecipes.filter((recipe) => {
+    // For API results, if we're showing suggestions, don't filter by search query
+    if (showAPIResults && showingSuggestions) {
+      // Only apply diet/category filters if they're set
+      const matchesCategory = selectedCategory === "all" || recipe.category === selectedCategory
+      const matchesDiet = selectedDiet === "all" || recipe.diet === selectedDiet
+      return matchesCategory && matchesDiet
+    }
+
     const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+
+    // Only apply filters to local recipes, not exact API matches
+    if (showAPIResults) {
+      return matchesSearch
+    }
+
     const matchesCategory = selectedCategory === "all" || recipe.category === selectedCategory
     const matchesDiet = selectedDiet === "all" || recipe.diet === selectedDiet
     return matchesSearch && matchesCategory && matchesDiet
   })
+
+  console.log("[v0] Filtered recipes count:", filteredRecipes.length)
+  console.log("[v0] Base recipes count:", baseRecipes.length)
+  console.log("[v0] showAPIResults:", showAPIResults)
+  console.log("[v0] showingSuggestions:", showingSuggestions)
+
+  useEffect(() => {
+    if (!searchQuery.trim() || searchQuery.length < 3) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      // Auto-trigger API search after 1 second of no typing
+      handleAPISearch()
+    }, 1000)
+
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  const handleAPISearch = async () => {
+    if (!searchQuery.trim()) {
+      toast({
+        title: "Enter a search term",
+        description: "Please type something to search for recipes",
+      })
+      return
+    }
+
+    console.log("[v0] Starting API search for:", searchQuery)
+    setIsSearchingAPI(true)
+    setShowAPIResults(true)
+    setShowingSuggestions(false)
+    setApiErrorMessage(null)
+
+    try {
+      const params = new URLSearchParams({
+        query: searchQuery,
+        ...(selectedDiet !== "all" && { diet: selectedDiet }),
+        ...(selectedCategory !== "all" && { type: selectedCategory }),
+      })
+
+      console.log("[v0] Fetching with params:", params.toString())
+      const response = await fetch(`/api/recipes/search?${params}`)
+
+      console.log("[v0] Response status:", response.status)
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error("[v0] API error response:", errorData)
+        throw new Error(errorData.error || "Failed to search recipes")
+      }
+
+      const data = await response.json()
+      console.log("[v0] Received recipes:", data.recipes?.length || 0)
+      setApiRecipes(data.recipes || [])
+      setShowingSuggestions(data.isSuggestion && data.recipes?.length > 0)
+
+      if (data.recipes?.length > 0) {
+        if (data.isSuggestion) {
+          toast({
+            title: "No exact matches found",
+            description: `Showing ${data.recipes.length} similar recipes you might like`,
+          })
+        } else {
+          toast({
+            title: "Search complete",
+            description: `Found ${data.recipes.length} recipes`,
+          })
+        }
+      } else {
+        toast({
+          title: "No recipes found",
+          description: "Try a different search term or browse your saved recipes",
+        })
+      }
+    } catch (error) {
+      console.error("[v0] API search error:", error)
+      const errorMessage = error instanceof Error ? error.message : "Could not search recipes"
+
+      if (errorMessage.includes("quota") || errorMessage.includes("OpenAI")) {
+        setApiErrorMessage(
+          "OpenAI API quota exceeded. Using free recipe database (limited results). Add credits at platform.openai.com to unlock AI-powered recipe search.",
+        )
+        toast({
+          title: "Using free recipe database",
+          description: "OpenAI quota exceeded. Results may be limited.",
+          variant: "destructive",
+        })
+      } else {
+        toast({
+          title: "Search failed",
+          description: errorMessage,
+          variant: "destructive",
+        })
+      }
+
+      setApiRecipes([])
+      setShowingSuggestions(false)
+    } finally {
+      setIsSearchingAPI(false)
+    }
+  }
 
   const handleSelectRecipe = (recipe: Recipe) => {
     const recentlyEaten = wasRecentlyEaten(recipe.id, allMealPlans, 3)
@@ -90,20 +219,32 @@ export function RecipeSelectorSheet({
       return
     }
 
+    if (onAddRecipeToLibrary) {
+      onAddRecipeToLibrary(recipe)
+    }
+
     onSelectRecipe(recipe)
     onClose()
     setSearchQuery("")
     setPreviewRecipe(null)
     setShowSuggestions(false)
+    setShowAPIResults(false)
+    setApiRecipes([])
   }
 
   const handleConfirmSelection = () => {
     if (confirmRecipe) {
+      if (onAddRecipeToLibrary) {
+        onAddRecipeToLibrary(confirmRecipe.recipe)
+      }
+
       onSelectRecipe(confirmRecipe.recipe)
       onClose()
       setSearchQuery("")
       setPreviewRecipe(null)
       setShowSuggestions(false)
+      setShowAPIResults(false)
+      setApiRecipes([])
       setConfirmRecipe(null)
     }
   }
@@ -140,30 +281,91 @@ export function RecipeSelectorSheet({
           </DialogHeader>
 
           <div className="px-6 space-y-3 flex-shrink-0">
-            <Button
-              variant={showSuggestions ? "default" : "outline"}
-              size="sm"
-              onClick={() => setShowSuggestions(!showSuggestions)}
-              className="w-full"
-              aria-pressed={showSuggestions}
-            >
-              <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
-              {showSuggestions ? "Showing Smart Suggestions" : "Show Smart Suggestions"}
-            </Button>
+            {apiErrorMessage && (
+              <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3 text-sm text-orange-800 dark:text-orange-200">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <p>{apiErrorMessage}</p>
+                </div>
+              </div>
+            )}
 
-            <div className="relative">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
-                aria-hidden="true"
-              />
-              <Input
-                placeholder="Search recipes..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-                aria-label="Search recipes"
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <Input
+                  placeholder="Search recipes or discover new dishes..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value)
+                    if (!e.target.value.trim()) {
+                      setShowAPIResults(false)
+                      setApiRecipes([])
+                      setShowingSuggestions(false)
+                      setApiErrorMessage(null)
+                    }
+                  }}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleAPISearch()
+                    }
+                  }}
+                  className="pl-9"
+                  aria-label="Search recipes"
+                />
+                {isSearchingAPI && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-primary" />
+                )}
+              </div>
+              <Button
+                onClick={handleAPISearch}
+                disabled={isSearchingAPI || !searchQuery.trim()}
+                variant="outline"
+                className="shrink-0 bg-transparent"
+              >
+                {isSearchingAPI ? <Loader2 className="h-4 w-4 animate-spin" /> : <Globe className="h-4 w-4" />}
+                <span className="ml-2 hidden sm:inline">Search Online</span>
+              </Button>
             </div>
+
+            {showAPIResults && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">
+                  {showingSuggestions
+                    ? `Showing ${apiRecipes.length} similar recipes`
+                    : `Showing ${apiRecipes.length} online results`}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setShowAPIResults(false)
+                    setApiRecipes([])
+                    setSearchQuery("")
+                    setShowingSuggestions(false)
+                    setApiErrorMessage(null)
+                  }}
+                >
+                  Back to My Recipes
+                </Button>
+              </div>
+            )}
+
+            {!showAPIResults && (
+              <Button
+                variant={showSuggestions ? "default" : "outline"}
+                size="sm"
+                onClick={() => setShowSuggestions(!showSuggestions)}
+                className="w-full"
+                aria-pressed={showSuggestions}
+              >
+                <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
+                {showSuggestions ? "Showing Smart Suggestions" : "Show Smart Suggestions"}
+              </Button>
+            )}
 
             <div
               className="flex gap-2 overflow-x-auto pb-2 px-1 hide-scrollbar"
@@ -344,6 +546,38 @@ export function RecipeSelectorSheet({
                   </div>
                 )
               })}
+              {isSearchingAPI && (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+                  <p className="text-sm text-muted-foreground mt-4">Searching for delicious recipes...</p>
+                </div>
+              )}
+              {filteredRecipes.length === 0 && !isSearchingAPI && (
+                <div className="text-center py-12 space-y-3">
+                  <p className="text-muted-foreground text-sm">
+                    {showAPIResults
+                      ? showingSuggestions
+                        ? "No similar recipes found. Try a different search term."
+                        : "No recipes found. Try a different search term."
+                      : "No recipes found. Try searching online for new dishes!"}
+                  </p>
+                  {showAPIResults && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setShowAPIResults(false)
+                        setApiRecipes([])
+                        setSearchQuery("")
+                        setShowingSuggestions(false)
+                        setApiErrorMessage(null)
+                      }}
+                    >
+                      Browse My Recipes
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </ScrollArea>
         </DialogContent>
