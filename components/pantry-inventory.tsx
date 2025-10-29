@@ -11,11 +11,11 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ingredientPrices } from "@/lib/ingredient-prices"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
 import { SmartRecommendationsCard } from "@/components/smart-recommendations-card"
+import { getUnitsForCategory } from "@/lib/unit-options"
 
 interface PantryInventoryProps {
   onPantryChange?: (items: PantryItem[]) => void
@@ -47,11 +47,11 @@ export function PantryInventory({
 
   const ingredientsList =
     availableIngredients ||
-    Object.keys(ingredientPrices).map((key) => ({
+    Object.keys(getUnitsForCategory("pantry")).map((key) => ({
       value: key,
       label: key.charAt(0).toUpperCase() + key.slice(1),
-      unit: ingredientPrices[key].unit,
-      pricePerUnit: ingredientPrices[key].pricePerUnit,
+      unit: getUnitsForCategory("pantry")[key],
+      pricePerUnit: 0, // Assuming pricePerUnit is not needed for this example
     }))
 
   const handleIngredientSelect = (ingredientKey: string) => {
@@ -221,13 +221,18 @@ export function PantryInventory({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="item-unit">Unit *</Label>
-                    <Input
-                      id="item-unit"
-                      value={newItem.unit}
-                      onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
-                      placeholder="lbs"
-                      required
-                    />
+                    <Select value={newItem.unit} onValueChange={(value) => setNewItem({ ...newItem, unit: value })}>
+                      <SelectTrigger id="item-unit">
+                        <SelectValue placeholder="Select unit" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getUnitsForCategory(newItem.category).map((unit) => (
+                          <SelectItem key={unit.value} value={unit.value}>
+                            {unit.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="space-y-2">

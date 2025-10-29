@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import type { Recipe, WeeklyMealPlans } from "@/lib/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast"
 import AIRecipeGenerator from "@/components/ai-recipe-generator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { RecipeDetailSheet } from "@/components/recipe-detail-sheet"
+import { isMobileDevice } from "@/lib/mobile-utils"
 
 interface RecipeSelectorSheetProps {
   recipes: Recipe[]
@@ -70,6 +71,7 @@ export function RecipeSelectorSheet({
   const [showFilters, setShowFilters] = useState(false)
   const { toast } = useToast()
   const [selectedRecipeForDetail, setSelectedRecipeForDetail] = useState<Recipe | null>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const categories = ["all", ...Array.from(new Set(recipes.map((r) => r.category)))]
   const diets = ["all", "classic", "low-carb", "keto", "flexitarian", "paleo", "vegetarian", "pescatarian", "vegan"]
@@ -137,6 +139,18 @@ export function RecipeSelectorSheet({
 
     return () => clearTimeout(timer)
   }, [searchQuery])
+
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      // Only autofocus on desktop, not mobile
+      if (!isMobileDevice()) {
+        searchInputRef.current.focus()
+      } else {
+        // On mobile, explicitly blur to prevent keyboard popup
+        searchInputRef.current.blur()
+      }
+    }
+  }, [isOpen])
 
   const handleAPISearch = async () => {
     if (!searchQuery.trim()) {
@@ -352,6 +366,7 @@ export function RecipeSelectorSheet({
                   aria-hidden="true"
                 />
                 <Input
+                  ref={searchInputRef}
                   placeholder="Search recipes..."
                   value={searchQuery}
                   onChange={(e) => {
@@ -371,6 +386,7 @@ export function RecipeSelectorSheet({
                   className="pl-9 h-11 rounded-xl border-2 focus:border-primary transition-colors"
                   aria-label="Search recipes"
                   inputMode="search"
+                  autoFocus={false}
                 />
                 {isSearchingAPI && (
                   <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-primary pointer-events-none" />
