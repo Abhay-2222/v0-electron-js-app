@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, Check, X } from "lucide-react"
+import { DollarSign, ChevronDown, ChevronUp, Edit2, Trash2, Check, X, Sparkles } from "lucide-react"
 
 interface WeeklyBudgetProps {
   budget?: number
@@ -19,10 +19,16 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
   const [budgetInput, setBudgetInput] = useState(budget?.toString() || "")
 
   const handleSaveBudget = () => {
+    console.log("[v0] Weekly budget save clicked, input value:", budgetInput)
     const amount = Number.parseFloat(budgetInput)
+    console.log("[v0] Parsed amount:", amount)
+
     if (!isNaN(amount) && amount > 0) {
+      console.log("[v0] Amount is valid, calling onSetBudget")
       onSetBudget?.(amount)
       setIsEditing(false)
+    } else {
+      console.log("[v0] Amount is invalid (must be greater than 0)")
     }
   }
 
@@ -47,27 +53,35 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
   // Editing/Setting budget state
   if (isEditing) {
     return (
-      <Card className="shadow-sm border-2 border-dashed">
-        <CardContent className="pt-3 pb-3">
+      <Card className="shadow-lg border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-background to-primary/5 animate-pulse-subtle relative overflow-hidden">
+        <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+          <Sparkles className="h-3 w-3" />
+          Start Here
+        </div>
+        <CardContent className="pt-4 pb-4">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-              <DollarSign className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-md">
+              <DollarSign className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <p className="text-xs font-medium mb-1">Weekly Budget</p>
-              <p className="text-[10px] text-muted-foreground">Set your weekly meal spending limit</p>
+              <p className="text-sm font-bold mb-0.5">Set Your Weekly Budget</p>
+              <p className="text-xs text-muted-foreground">Start planning your meals and save money</p>
             </div>
           </div>
-          <div className="flex gap-2 mt-2">
+          <div className="flex gap-2 mt-3">
             <div className="relative flex-1">
-              <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
+                $
+              </span>
               <Input
                 type="number"
-                placeholder="0.00"
+                placeholder="100.00"
                 value={budgetInput}
                 onChange={(e) => setBudgetInput(e.target.value)}
-                className="pl-6 h-8 text-sm"
+                className="pl-7 h-10 text-base font-medium"
                 aria-label="Budget amount"
+                min="0.01"
+                step="0.01"
               />
             </div>
             <Button
@@ -75,9 +89,9 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
               onClick={handleSaveBudget}
               disabled={!budgetInput || Number.parseFloat(budgetInput) <= 0}
               aria-label="Save budget"
-              className="h-8 w-8"
+              className="h-10 w-10 shadow-md"
             >
-              <Check className="h-3 w-3" aria-hidden="true" />
+              <Check className="h-4 w-4" aria-hidden="true" />
             </Button>
             {budget && (
               <Button
@@ -85,9 +99,9 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
                 variant="ghost"
                 onClick={handleCancelEdit}
                 aria-label="Cancel editing"
-                className="h-8 w-8"
+                className="h-10 w-10"
               >
-                <X className="h-3 w-3" aria-hidden="true" />
+                <X className="h-4 w-4" aria-hidden="true" />
               </Button>
             )}
           </div>

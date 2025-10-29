@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Clock, Users, Flame, DollarSign, ShoppingCart, ChefHat, Leaf, Check, ExternalLink } from "lucide-react"
 import Image from "next/image"
+import { openMobileFriendlyURL } from "@/lib/mobile-utils"
 
 interface RecipeDetailSheetProps {
   recipe: Recipe
@@ -76,7 +77,7 @@ export function RecipeDetailSheet({ recipe, isOpen, onClose, onAddToMealPlan, cu
           title: "Opening Instacart",
           description: `Ordering ${missingIngredients.length} ingredients for ${recipe.name}`,
         })
-        window.open(data.url, "_blank")
+        openMobileFriendlyURL(data.url)
       } else {
         throw new Error("No URL returned from Instacart")
       }

@@ -18,10 +18,16 @@ export function BudgetInputDialog({ open, onOpenChange, currentBudget, onSave }:
   const [budget, setBudget] = useState(currentBudget.toString())
 
   const handleSave = () => {
+    console.log("[v0] Budget save clicked, input value:", budget)
     const parsedBudget = Number.parseFloat(budget)
-    if (!Number.isNaN(parsedBudget) && parsedBudget >= 0) {
+    console.log("[v0] Parsed budget:", parsedBudget)
+
+    if (!Number.isNaN(parsedBudget) && parsedBudget > 0) {
+      console.log("[v0] Budget is valid, saving:", parsedBudget)
       onSave(parsedBudget)
       onOpenChange(false)
+    } else {
+      console.log("[v0] Budget is invalid (must be greater than 0)")
     }
   }
 
@@ -40,7 +46,7 @@ export function BudgetInputDialog({ open, onOpenChange, currentBudget, onSave }:
                 id="budget"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 value={budget}
                 onChange={(e) => setBudget(e.target.value)}
                 placeholder="0.00"
@@ -56,7 +62,9 @@ export function BudgetInputDialog({ open, onOpenChange, currentBudget, onSave }:
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Budget</Button>
+          <Button onClick={handleSave} disabled={!budget || Number.parseFloat(budget) <= 0}>
+            Save Budget
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

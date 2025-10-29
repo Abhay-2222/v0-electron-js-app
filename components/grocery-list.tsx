@@ -28,6 +28,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { calculateIngredientCost } from "@/lib/ingredient-prices"
 import { useToast } from "@/hooks/use-toast"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { openMobileFriendlyURL } from "@/lib/mobile-utils"
 
 interface GroceryListProps {
   mealPlan: MealPlan
@@ -213,7 +214,7 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
           description: "Opening Instacart to complete your order...",
         })
 
-        window.open(data.url, "_blank")
+        openMobileFriendlyURL(data.url)
       } else {
         throw new Error("No URL returned from Instacart")
       }
