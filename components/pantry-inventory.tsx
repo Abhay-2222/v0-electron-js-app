@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { PantryItem, DynamicIngredient } from "@/lib/types"
+import type { PantryItem, DynamicIngredient, Recipe, WeeklyMealPlans } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,13 +15,23 @@ import { ingredientPrices } from "@/lib/ingredient-prices"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
+import { SmartRecommendationsCard } from "@/components/smart-recommendations-card"
 
 interface PantryInventoryProps {
   onPantryChange?: (items: PantryItem[]) => void
   availableIngredients?: DynamicIngredient[]
+  recipes?: Recipe[]
+  allMealPlans?: WeeklyMealPlans
+  onSelectRecipe?: (recipe: Recipe) => void
 }
 
-export function PantryInventory({ onPantryChange, availableIngredients }: PantryInventoryProps) {
+export function PantryInventory({
+  onPantryChange,
+  availableIngredients,
+  recipes,
+  allMealPlans,
+  onSelectRecipe,
+}: PantryInventoryProps) {
   const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("pantry-inventory", [])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -43,9 +53,6 @@ export function PantryInventory({ onPantryChange, availableIngredients }: Pantry
       unit: ingredientPrices[key].unit,
       pricePerUnit: ingredientPrices[key].pricePerUnit,
     }))
-
-  console.log("[v0] Pantry: Available ingredients count:", ingredientsList.length)
-  console.log("[v0] Pantry: Using", availableIngredients ? "dynamic" : "static", "ingredients")
 
   const handleIngredientSelect = (ingredientKey: string) => {
     const ingredient = ingredientsList.find((i) => i.value === ingredientKey)
@@ -292,6 +299,18 @@ export function PantryInventory({ onPantryChange, availableIngredients }: Pantry
         )}
       </CardHeader>
       <CardContent>
+        {pantryItems.length > 0 && recipes && allMealPlans && onSelectRecipe && (
+          <div className="mb-4">
+            <SmartRecommendationsCard
+              recipes={recipes}
+              pantryItems={pantryItems}
+              allMealPlans={allMealPlans}
+              onSelectRecipe={onSelectRecipe}
+              compact={false}
+            />
+          </div>
+        )}
+
         {pantryItems.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-3 opacity-50" aria-hidden="true" />

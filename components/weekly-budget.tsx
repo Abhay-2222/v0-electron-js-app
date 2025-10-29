@@ -106,17 +106,8 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
   const progressBarWidth = Math.min(percentUsed, 100)
 
   return (
-    <Card className="shadow-sm relative overflow-hidden">
-      <div
-        className="absolute inset-0 opacity-40 pointer-events-none animate-gradient-shift"
-        style={{
-          background:
-            "linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(16, 185, 129, 0.25) 25%, rgba(34, 197, 94, 0.3) 50%, rgba(16, 185, 129, 0.25) 75%, rgba(34, 197, 94, 0.15) 100%)",
-          backgroundSize: "300% 300%",
-        }}
-      />
-
-      <CardContent className="pt-3 pb-3 relative z-10">
+    <Card className="shadow-sm">
+      <CardContent className="pt-3 pb-3">
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <button
@@ -125,12 +116,12 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
               aria-expanded={isExpanded}
               aria-label={`Weekly budget: $${budget}, ${isOverBudget ? "over budget" : `${Math.min(percentUsed, 100).toFixed(0)}% used`}, ${isExpanded ? "collapse" : "expand"} details`}
             >
-              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                <DollarSign className="h-4 w-4 text-primary" aria-hidden="true" />
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center flex-shrink-0">
+                <DollarSign className="h-5 w-5 text-primary" aria-hidden="true" />
               </div>
               <div className="text-left">
-                <p className="text-[10px] font-medium text-muted-foreground">Weekly Budget</p>
-                <p className="text-base font-bold">${budget}</p>
+                <p className="text-xs text-muted-foreground">Weekly Budget</p>
+                <p className="text-xl">${budget}</p>
               </div>
               <div className="ml-auto">
                 {isExpanded ? (
@@ -158,7 +149,7 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
 
           {isExpanded && (
             <div className="space-y-2" role="region" aria-label="Budget details">
-              <div className="relative h-1.5 bg-muted rounded-full overflow-hidden">
+              <div className="relative h-2 bg-muted rounded-full overflow-hidden">
                 <div
                   className={`absolute inset-y-0 left-0 rounded-full transition-all ${
                     isOverBudget ? "bg-destructive" : "bg-primary"
@@ -176,14 +167,14 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
                 <span className={`${isOverBudget ? "text-destructive" : "text-muted-foreground"}`}>
                   {percentUsed.toFixed(0)}% used
                 </span>
-                <span className={`font-semibold ${isOverBudget ? "text-destructive" : "text-primary"}`}>
+                <span className={`${isOverBudget ? "text-destructive" : "text-primary"}`}>
                   {isOverBudget ? `$${overAmount.toFixed(2)} over` : `$${remaining.toFixed(2)} left`}
                 </span>
               </div>
 
               {isOverBudget && (
                 <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2">
-                  <p className="text-[10px] text-destructive font-medium">
+                  <p className="text-[10px] text-destructive">
                     You're over budget! Consider choosing more affordable meals.
                   </p>
                 </div>

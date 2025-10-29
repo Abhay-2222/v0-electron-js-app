@@ -10,6 +10,7 @@ import { User, Palette, Database, Info, Mail, BarChart3, History } from "lucide-
 import { useState, useMemo } from "react"
 import type { WeeklyMealPlans } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
+import { APIConnectionTest } from "@/components/settings/api-connection-test"
 
 interface SettingsProps {
   highContrast: boolean
@@ -105,6 +106,9 @@ export function Settings({
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
+      {/* API Connection Test */}
+      <APIConnectionTest />
+
       {/* Profile Section */}
       <Card className="shadow-sm border-border/40">
         <CardHeader className="pb-3">

@@ -1,0 +1,139 @@
+"use client"
+
+import { useState } from "react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { MapPin, Store, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import type { InstacartStore } from "@/lib/types"
+
+interface StoreSelectorDialogProps {
+  open: boolean
+  onClose: () => void
+  onSelectStore: (store: InstacartStore) => void
+}
+
+export function StoreSelectorDialog({ open, onClose, onSelectStore }: StoreSelectorDialogProps) {
+  const [zipCode, setZipCode] = useState("")
+  const [stores, setStores] = useState<InstacartStore[]>([])
+  const [loading, setLoading] = useState(false)
+  const [selectedStore, setSelectedStore] = useState<InstacartStore | null>(null)
+  const { toast } = useToast()
+
+  const handleSearch = async () => {
+    if (!zipCode || zipCode.length < 5) {
+      toast({
+        title: "Invalid ZIP code",
+        description: "Please enter a valid 5-digit ZIP code",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setLoading(true)
+    try {
+      const response = await fetch("/api/instacart/stores", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ zipCode }),
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch stores")
+      }
+
+      const data = await response.json()
+      setStores(data.stores)
+
+      if (data.stores.length === 0) {
+        toast({
+          title: "No stores found",
+          description: "No Instacart stores available in your area",
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch stores. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleConfirm = () => {
+    if (selectedStore) {
+      onSelectStore(selectedStore)
+      onClose()
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Select Instacart Store</DialogTitle>
+          <DialogDescription>Choose your preferred store for delivery</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4 py-4">
+          <div className="space-y-2">
+            <Label htmlFor="zipCode">ZIP Code</Label>
+            <div className="flex gap-2">
+              <Input
+                id="zipCode"
+                placeholder="Enter ZIP code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                maxLength={5}
+                className="flex-1"
+              />
+              <Button onClick={handleSearch} disabled={loading}>
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <MapPin className="h-4 w-4" />}
+              </Button>
+            </div>
+          </div>
+
+          {stores.length > 0 && (
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {stores.map((store) => (
+                <button
+                  key={store.id}
+                  onClick={() => setSelectedStore(store)}
+                  className={`w-full p-4 rounded-lg border-2 transition-all text-left ${
+                    selectedStore?.id === store.id
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <Store className="h-5 w-5 mt-0.5 text-primary" />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium">{store.name}</h4>
+                      <p className="text-sm text-muted-foreground">{store.address}</p>
+                      {store.distance && (
+                        <p className="text-xs text-muted-foreground mt-1">{store.distance.toFixed(1)} miles away</p>
+                      )}
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="flex justify-end gap-2">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm} disabled={!selectedStore}>
+            Continue
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}

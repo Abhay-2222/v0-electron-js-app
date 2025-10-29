@@ -245,9 +245,10 @@
   }
 
   /* Refined typography with better hierarchy and spacing */
+  /* Updated typography to use regular font weight (400) instead of bold/semibold */
   h1 {
     font-size: 2rem;
-    font-weight: 600;
+    font-weight: 400;
     line-height: 1.15;
     letter-spacing: -0.03em;
   }
@@ -260,7 +261,7 @@
 
   h2 {
     @apply text-xl tracking-tight leading-tight;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   @media (min-width: 768px) {
@@ -271,7 +272,7 @@
 
   h3 {
     @apply text-lg leading-tight;
-    font-weight: 600;
+    font-weight: 400;
   }
 
   @media (min-width: 768px) {
@@ -288,7 +289,14 @@
   label,
   .label {
     @apply text-sm leading-normal;
-    font-weight: 500;
+    font-weight: 400;
+  }
+
+  /* Override all bold, semibold, and medium font weights to normal */
+  .font-bold,
+  .font-semibold,
+  .font-medium {
+    font-weight: 400 !important;
   }
 
   /* Enhanced button and interactive element transitions with animations */

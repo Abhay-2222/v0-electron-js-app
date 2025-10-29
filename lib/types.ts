@@ -91,3 +91,36 @@ export interface WeekHistory {
   spent: number
   mealCount: number
 }
+
+export interface InstacartStore {
+  id: string
+  name: string
+  address: string
+  distance?: number
+  logo_url?: string
+  delivery_available: boolean
+  pickup_available: boolean
+}
+
+export interface DeliveryTimeSlot {
+  id: string
+  start_time: string
+  end_time: string
+  fee: number
+  available: boolean
+}
+
+export interface InstacartOrder {
+  id: string
+  status: "pending" | "shopping" | "delivering" | "delivered" | "cancelled"
+  store: InstacartStore
+  delivery_time: DeliveryTimeSlot
+  items: Array<{
+    name: string
+    quantity: number
+    price: number
+    image_url?: string
+  }>
+  total: number
+  created_at: string
+}

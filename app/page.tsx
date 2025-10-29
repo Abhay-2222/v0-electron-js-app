@@ -1,8 +1,7 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
-import type { Recipe, MealPlan, WeeklyMealPlans, PantryItem, WeeklyBudgets, WeekHistory } from "@/lib/types"
-import { sampleRecipes } from "@/lib/sample-recipes"
+import { useState, useMemo } from "react"
+import type { Recipe } from "@/lib/types"
 import { WeeklyPlanner } from "@/components/weekly-planner"
 import { GroceryList } from "@/components/grocery-list"
 import { RecipeSelectorSheet } from "@/components/recipe-selector-sheet"
@@ -13,73 +12,42 @@ import { InitialSplash } from "@/components/initial-splash"
 import { AuthScreen } from "@/components/auth-screen"
 import { OnboardingSplash } from "@/components/onboarding-splash"
 import { WeekHistoryView } from "@/components/week-history"
-import {
-  UtensilsCrossed,
-  Calendar,
-  ShoppingCart,
-  Contrast,
-  Package,
-  SettingsIcon,
-  MoreVertical,
-  User,
-  LogOut,
-} from "lucide-react"
-import { getWeekKey, getWeekStart, getWeekEnd } from "@/lib/date-utils"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { calculateGroceryListCost } from "@/lib/meal-utils"
+import { AppHeader } from "@/components/layout/app-header"
+import { AppNavigation } from "@/components/layout/app-navigation"
+import { getWeekKey, getWeekEnd } from "@/lib/date-utils"
 import { useDynamicIngredients } from "@/hooks/use-dynamic-ingredients"
+import { useAppState } from "@/hooks/use-app-state"
+import { useRecipes } from "@/lib/contexts/recipe-context"
+import { useMealPlan } from "@/lib/contexts/meal-plan-context"
+import { usePantry } from "@/lib/contexts/pantry-context"
+import { useBudget } from "@/lib/contexts/budget-context"
+import { SmartRecommendationsCard } from "@/components/smart-recommendations-card"
+import { ExpiringIngredientsAlert } from "@/components/expiring-ingredients-alert"
+import { BudgetOptimizer } from "@/components/budget-optimizer"
+import { BudgetInputDialog } from "@/components/budget-input-dialog"
+import type { WeekHistory } from "@/lib/types"
 
-type AppState = "initial-splash" | "auth" | "onboarding" | "main"
+type TabType = "planner" | "grocery" | "pantry" | "settings" | "history"
 
 export default function MealPlannerPage() {
-  const [recipes, setRecipes] = useLocalStorage<Recipe[]>("meal-planner-recipes", sampleRecipes)
-  const [allMealPlans, setAllMealPlans] = useLocalStorage<WeeklyMealPlans>("meal-planner-weeks", {})
-  const [weeklyBudgets, setWeeklyBudgets] = useLocalStorage<WeeklyBudgets>("weekly-budgets", {})
-  const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("pantry-inventory", [])
+  const { recipes, addRecipe } = useRecipes()
+  const { allMealPlans, currentWeekStart, currentMealPlan, setCurrentWeekStart, addMeal, updateMealPlan } =
+    useMealPlan()
+  const { pantryItems, setPantryItems } = usePantry()
+  const { weeklyBudgets, getCurrentBudget, setWeekBudget, calculateSpending } = useBudget()
+
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [selectedSlot, setSelectedSlot] = useState<{ day: string; mealType: string } | null>(null)
   const [highContrast, setHighContrast] = useLocalStorage("high-contrast-mode", false)
-  const [currentWeekStart, setCurrentWeekStart] = useState(() => getWeekStart(new Date()))
-  const [activeTab, setActiveTab] = useState<"planner" | "grocery" | "pantry" | "settings" | "history">("planner")
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useLocalStorage("onboarding-completed", false)
-  const [hasAuthenticated, setHasAuthenticated] = useLocalStorage("authenticated", false)
-  const [isClient, setIsClient] = useState(false)
-  const [appState, setAppState] = useState<AppState>("initial-splash")
+  const [activeTab, setActiveTab] = useState<TabType>("planner")
+  const [budgetDialogOpen, setBudgetDialogOpen] = useState(false)
   const { allIngredients, addIngredientsFromRecipe } = useDynamicIngredients()
+  const { appState, isClient, completeAuth, completeOnboarding, signOut } = useAppState()
 
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
-
-  useEffect(() => {
-    if (isClient) {
-      if (!hasAuthenticated) {
-        setAppState("initial-splash")
-      } else if (!hasCompletedOnboarding) {
-        setAppState("onboarding")
-      } else {
-        setAppState("main")
-      }
-    }
-  }, [isClient, hasAuthenticated, hasCompletedOnboarding])
-
-  const currentWeekKey = getWeekKey(currentWeekStart)
-  const currentMealPlan = allMealPlans[currentWeekKey] || {}
-  const currentWeekBudget = weeklyBudgets[currentWeekKey] || 0
-
-  const handleUpdateMealPlan = (mealPlan: MealPlan) => {
-    const newAllPlans = { ...allMealPlans }
-    newAllPlans[currentWeekKey] = mealPlan
-    setAllMealPlans(newAllPlans)
-  }
+  const currentWeekBudget = getCurrentBudget(currentWeekStart)
+  const actualSpending = useMemo(() => {
+    return calculateSpending(currentMealPlan, pantryItems)
+  }, [currentMealPlan, pantryItems, calculateSpending])
 
   const handleAddMeal = (day: string, mealType: string) => {
     setSelectedSlot({ day, mealType })
@@ -88,28 +56,21 @@ export default function MealPlannerPage() {
 
   const handleSelectRecipe = (recipe: Recipe) => {
     if (!selectedSlot) return
-
     const { day, mealType } = selectedSlot
-    const newMealPlan = { ...currentMealPlan }
-    if (!newMealPlan[day]) {
-      newMealPlan[day] = {}
-    }
-    newMealPlan[day][mealType] = recipe
-    handleUpdateMealPlan(newMealPlan)
+    addMeal(day, mealType, recipe)
   }
 
-  const handlePantryChange = (items: PantryItem[]) => {
-    setPantryItems(items)
+  const handleSmartRecipeSelect = (recipe: Recipe) => {
+    setSelectorOpen(true)
   }
 
-  const actualSpending = useMemo(() => {
-    return calculateGroceryListCost(currentMealPlan, pantryItems)
-  }, [currentMealPlan, pantryItems])
+  const handleAddRecipeToLibrary = (recipe: Recipe) => {
+    addIngredientsFromRecipe(recipe.ingredients)
+    addRecipe(recipe)
+  }
 
-  const handleBudgetChange = (budget: number) => {
-    const newBudgets = { ...weeklyBudgets }
-    newBudgets[currentWeekKey] = budget
-    setWeeklyBudgets(newBudgets)
+  const handleViewRecommendations = () => {
+    setActiveTab("pantry")
   }
 
   const weekHistory = useMemo((): WeekHistory[] => {
@@ -119,12 +80,11 @@ export default function MealPlannerPage() {
     for (let i = 1; i <= 4; i++) {
       const weekStart = new Date(today)
       weekStart.setDate(today.getDate() - i * 7)
-      const weekStartDate = getWeekStart(weekStart)
-      const weekKey = getWeekKey(weekStartDate)
+      const weekKey = getWeekKey(weekStart)
 
       const mealPlan = allMealPlans[weekKey] || {}
       const budget = weeklyBudgets[weekKey] || 0
-      const spent = calculateGroceryListCost(mealPlan, pantryItems)
+      const spent = calculateSpending(mealPlan, pantryItems)
 
       let mealCount = 0
       Object.values(mealPlan).forEach((dayMeals) => {
@@ -134,8 +94,8 @@ export default function MealPlannerPage() {
       if (mealCount > 0 || budget > 0) {
         history.push({
           weekKey,
-          weekStart: weekStartDate,
-          weekEnd: getWeekEnd(weekStartDate),
+          weekStart,
+          weekEnd: getWeekEnd(weekStart),
           mealPlan,
           budget,
           spent,
@@ -145,129 +105,66 @@ export default function MealPlannerPage() {
     }
 
     return history
-  }, [allMealPlans, weeklyBudgets, pantryItems])
+  }, [allMealPlans, weeklyBudgets, pantryItems, calculateSpending])
 
-  const handleSignOut = () => {
-    setHasAuthenticated(false)
-    setHasCompletedOnboarding(false)
-    setAppState("initial-splash")
-  }
-
-  const handleAddRecipeToLibrary = (recipe: Recipe) => {
-    console.log("[v0] handleAddRecipeToLibrary called for recipe:", recipe.name)
-    console.log("[v0] Recipe ID:", recipe.id)
-    console.log("[v0] Recipe ingredients:", recipe.ingredients.length)
-
-    addIngredientsFromRecipe(recipe.ingredients)
-    console.log("[v0] Ingredients added to dynamic database")
-
-    // Add recipe to library if it doesn't exist
-    const exists = recipes.some((r) => r.id === recipe.id)
-    if (!exists) {
-      setRecipes([...recipes, recipe])
-      console.log("[v0] Recipe added to library")
-    } else {
-      console.log("[v0] Recipe already exists in library")
-    }
-  }
-
-  if (!isClient) {
-    return null
-  }
+  if (!isClient) return null
 
   if (appState === "initial-splash") {
-    return (
-      <InitialSplash
-        onComplete={() => {
-          setAppState("auth")
-        }}
-      />
-    )
+    return <InitialSplash onComplete={() => completeAuth()} />
   }
 
   if (appState === "auth") {
-    return (
-      <AuthScreen
-        onComplete={() => {
-          setHasAuthenticated(true)
-          setAppState("onboarding")
-        }}
-      />
-    )
+    return <AuthScreen onComplete={completeAuth} />
   }
 
   if (appState === "onboarding") {
-    return (
-      <OnboardingSplash
-        onComplete={() => {
-          setHasCompletedOnboarding(true)
-          setAppState("main")
-        }}
-      />
-    )
+    return <OnboardingSplash onComplete={completeOnboarding} />
   }
 
   return (
     <div className={`min-h-screen bg-background ${highContrast ? "high-contrast" : ""}`}>
-      <header className="sticky top-0 z-20 glass-effect border-b border-border/50">
-        <div className="container mx-auto px-5 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center h-11 w-11 rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover-scale">
-                <UtensilsCrossed className="h-5 w-5" aria-hidden="true" />
-              </div>
-            </div>
-            <DropdownMenu modal={false}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Open menu"
-                  className="rounded-2xl h-11 w-11 hover:bg-muted/60 transition-all hover-scale"
-                >
-                  <MoreVertical className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-52" sideOffset={12}>
-                <DropdownMenuLabel className="text-sm font-medium">Menu</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setActiveTab("settings")} className="cursor-pointer">
-                  <User className="mr-3 h-4 w-4" />
-                  Profile
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => setHighContrast(!highContrast)}
-                  className={`cursor-pointer ${highContrast ? "bg-accent" : ""}`}
-                >
-                  <Contrast className="mr-3 h-4 w-4" />
-                  High Contrast
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={handleSignOut}
-                  className="text-destructive focus:text-destructive cursor-pointer"
-                >
-                  <LogOut className="mr-3 h-4 w-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-      </header>
+      <AppHeader
+        highContrast={highContrast}
+        onHighContrastToggle={() => setHighContrast(!highContrast)}
+        onSettingsClick={() => setActiveTab("settings")}
+        onSignOut={signOut}
+      />
 
       <main className="container mx-auto px-5 sm:px-6 md:px-8 py-6 pb-32 overflow-y-auto">
         <div className="w-full max-w-4xl mx-auto">
           {activeTab === "planner" && (
-            <div className="animate-scale-in">
+            <div className="space-y-4 animate-scale-in">
+              <div className="space-y-3">
+                <ExpiringIngredientsAlert
+                  pantryItems={pantryItems}
+                  recipes={recipes}
+                  allMealPlans={allMealPlans}
+                  onSelectRecipe={handleSmartRecipeSelect}
+                />
+                <BudgetOptimizer
+                  currentSpending={actualSpending}
+                  weeklyBudget={currentWeekBudget}
+                  mealPlan={currentMealPlan}
+                />
+                <button onClick={handleViewRecommendations} className="w-full">
+                  <SmartRecommendationsCard
+                    recipes={recipes}
+                    pantryItems={pantryItems}
+                    allMealPlans={allMealPlans}
+                    onSelectRecipe={handleSmartRecipeSelect}
+                    compact={true}
+                  />
+                </button>
+              </div>
+
               <WeeklyPlanner
                 mealPlan={currentMealPlan}
-                onUpdateMealPlan={handleUpdateMealPlan}
+                onUpdateMealPlan={updateMealPlan}
                 onAddMeal={handleAddMeal}
                 currentWeekStart={currentWeekStart}
                 onWeekChange={setCurrentWeekStart}
                 weeklyBudget={currentWeekBudget}
-                onBudgetChange={handleBudgetChange}
+                onBudgetChange={() => setBudgetDialogOpen(true)}
                 actualSpending={actualSpending}
               />
             </div>
@@ -280,8 +177,15 @@ export default function MealPlannerPage() {
           )}
 
           {activeTab === "pantry" && (
-            <div className="animate-scale-in">
-              <PantryInventory onPantryChange={handlePantryChange} availableIngredients={allIngredients} />
+            <div className="space-y-4 animate-scale-in">
+              <SmartRecommendationsCard
+                recipes={recipes}
+                pantryItems={pantryItems}
+                allMealPlans={allMealPlans}
+                onSelectRecipe={handleSmartRecipeSelect}
+                compact={false}
+              />
+              <PantryInventory onPantryChange={setPantryItems} availableIngredients={allIngredients} />
             </div>
           )}
 
@@ -305,103 +209,7 @@ export default function MealPlannerPage() {
         </div>
       </main>
 
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-30 glass-effect border-t border-border/50"
-        role="navigation"
-        aria-label="Main navigation"
-      >
-        <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-around py-3 gap-2 max-w-md mx-auto">
-            <button
-              onClick={() => setActiveTab("planner")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
-                activeTab === "planner"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              }`}
-              aria-label="Planner"
-              aria-current={activeTab === "planner" ? "page" : undefined}
-            >
-              <div
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  activeTab === "planner"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent"
-                }`}
-              >
-                <Calendar className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[10px] font-medium tracking-wide">Planner</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("grocery")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
-                activeTab === "grocery"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              }`}
-              aria-label="Grocery List"
-              aria-current={activeTab === "grocery" ? "page" : undefined}
-            >
-              <div
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  activeTab === "grocery"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent"
-                }`}
-              >
-                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[10px] font-medium tracking-wide">Grocery</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("pantry")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
-                activeTab === "pantry"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              }`}
-              aria-label="Pantry Inventory"
-              aria-current={activeTab === "pantry" ? "page" : undefined}
-            >
-              <div
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  activeTab === "pantry"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent"
-                }`}
-              >
-                <Package className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[10px] font-medium tracking-wide">Pantry</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-5 rounded-2xl transition-all duration-300 ${
-                activeTab === "settings"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
-              }`}
-              aria-label="Settings"
-              aria-current={activeTab === "settings" ? "page" : undefined}
-            >
-              <div
-                className={`p-2.5 rounded-xl transition-all duration-300 ${
-                  activeTab === "settings"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                    : "bg-transparent"
-                }`}
-              >
-                <SettingsIcon className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[10px] font-medium tracking-wide">Settings</span>
-            </button>
-          </div>
-        </div>
-      </nav>
+      <AppNavigation activeTab={activeTab} onTabChange={setActiveTab} />
 
       <RecipeSelectorSheet
         recipes={recipes}
@@ -412,6 +220,13 @@ export default function MealPlannerPage() {
         currentMeal={selectedSlot ? `${selectedSlot.mealType} for ${selectedSlot.day}` : undefined}
         allMealPlans={allMealPlans}
         weeklyBudget={currentWeekBudget}
+      />
+
+      <BudgetInputDialog
+        open={budgetDialogOpen}
+        onOpenChange={setBudgetDialogOpen}
+        currentBudget={currentWeekBudget}
+        onSave={(budget) => setWeekBudget(currentWeekStart, budget)}
       />
     </div>
   )

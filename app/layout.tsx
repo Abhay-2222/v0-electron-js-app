@@ -1,7 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
+import { AppProviders } from "@/lib/contexts/app-providers"
 
 export const metadata: Metadata = {
   title: "Meal Planner - Plan Smart, Eat Well",
@@ -17,8 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased overflow-y-auto">
-        {children}
-        <Analytics />
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   )
