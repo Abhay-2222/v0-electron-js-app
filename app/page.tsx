@@ -146,15 +146,17 @@ export default function MealPlannerPage() {
                   weeklyBudget={currentWeekBudget}
                   mealPlan={currentMealPlan}
                 />
-                <button onClick={handleViewRecommendations} className="w-full">
-                  <SmartRecommendationsCard
-                    recipes={recipes}
-                    pantryItems={pantryItems}
-                    allMealPlans={allMealPlans}
-                    onSelectRecipe={handleSmartRecipeSelect}
-                    compact={true}
-                  />
-                </button>
+                {pantryItems.length > 0 && (
+                  <button onClick={handleViewRecommendations} className="w-full">
+                    <SmartRecommendationsCard
+                      recipes={recipes}
+                      pantryItems={pantryItems}
+                      allMealPlans={allMealPlans}
+                      onSelectRecipe={handleSmartRecipeSelect}
+                      compact={true}
+                    />
+                  </button>
+                )}
               </div>
 
               <WeeklyPlanner
