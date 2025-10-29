@@ -89,7 +89,7 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
       onTouchEnd={onTouchEnd}
     >
       {/* Header with Back button */}
-      <div className="container mx-auto px-4 py-3">
+      <div className="container mx-auto px-4 py-3 flex-shrink-0">
         {currentScreen > 0 && (
           <button
             onClick={handleBack}
@@ -102,56 +102,60 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
         )}
       </div>
 
-      {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 max-w-2xl mx-auto w-full">
-        {/* Title */}
-        <h1 className="text-3xl md:text-4xl text-center text-foreground mb-6 leading-tight font-normal">
-          {currentSplash.title}
-        </h1>
+      {/* Main content - scrollable */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
+        <div className="flex flex-col items-center justify-center px-6 py-8 pb-32 max-w-2xl mx-auto w-full min-h-full">
+          {/* Title */}
+          <h1 className="text-3xl md:text-4xl text-center text-foreground mb-6 leading-tight font-normal">
+            {currentSplash.title}
+          </h1>
 
-        {/* Illustration */}
-        <div className="relative w-full max-w-[320px] md:max-w-[400px] aspect-square mb-6 flex items-center justify-center">
-          <div className="absolute inset-0 bg-muted/20 rounded-full blur-3xl scale-75" />
-          <Image
-            src={currentSplash.image || "/placeholder.svg"}
-            alt={currentSplash.title}
-            width={400}
-            height={400}
-            className="relative z-10 w-full h-full object-contain"
-          />
+          {/* Illustration */}
+          <div className="relative w-full max-w-[320px] md:max-w-[400px] aspect-square mb-6 flex items-center justify-center">
+            <div className="absolute inset-0 bg-muted/20 rounded-full blur-3xl scale-75" />
+            <Image
+              src={currentSplash.image || "/placeholder.svg"}
+              alt={currentSplash.title}
+              width={400}
+              height={400}
+              className="relative z-10 w-full h-full object-contain"
+            />
+          </div>
+
+          {/* Description */}
+          <p className="text-center text-muted-foreground text-base md:text-lg max-w-md leading-relaxed font-normal">
+            {currentSplash.description}
+          </p>
         </div>
-
-        {/* Description */}
-        <p className="text-center text-muted-foreground text-base md:text-lg max-w-md leading-relaxed font-normal">
-          {currentSplash.description}
-        </p>
       </div>
 
-      {/* Footer with pagination and button */}
-      <div className="container mx-auto px-6 pb-8 space-y-5 max-w-2xl">
-        <div className="flex items-center justify-center gap-2">
-          {splashScreens.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentScreen(index)}
-              className={`rounded-full transition-all duration-300 ${
-                index === currentScreen
-                  ? "bg-primary w-2.5 h-2.5"
-                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2 h-2"
-              }`}
-              aria-label={`Go to screen ${index + 1}`}
-              aria-current={index === currentScreen ? "true" : "false"}
-            />
-          ))}
-        </div>
+      {/* Footer with pagination and button - fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/40 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5 max-w-2xl">
+          <div className="flex items-center justify-center gap-2">
+            {splashScreens.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setCurrentScreen(index)}
+                className={`rounded-full transition-all duration-300 ${
+                  index === currentScreen
+                    ? "bg-primary w-2.5 h-2.5"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2 h-2"
+                }`}
+                aria-label={`Go to screen ${index + 1}`}
+                aria-current={index === currentScreen ? "true" : "false"}
+              />
+            ))}
+          </div>
 
-        <Button
-          onClick={handleNext}
-          className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-normal"
-          size="lg"
-        >
-          {currentScreen < splashScreens.length - 1 ? "Continue" : "Get Started"}
-        </Button>
+          <Button
+            onClick={handleNext}
+            className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-normal"
+            size="lg"
+          >
+            {currentScreen < splashScreens.length - 1 ? "Continue" : "Get Started"}
+          </Button>
+        </div>
       </div>
     </div>
   )
