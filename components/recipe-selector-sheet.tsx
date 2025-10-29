@@ -312,8 +312,10 @@ export function RecipeSelectorSheet({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl h-[85vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="px-6 pt-4 pb-3 flex-shrink-0 border-b">
-            <DialogTitle className="text-lg">{currentMeal ? `Select ${currentMeal}` : "Select Recipe"}</DialogTitle>
+          <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b">
+            <DialogTitle className="text-xl font-semibold">
+              {currentMeal ? `Select ${currentMeal}` : "Select Recipe"}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="px-6 py-3 space-y-3 flex-shrink-0 border-b bg-muted/30">
@@ -385,13 +387,14 @@ export function RecipeSelectorSheet({
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="max-h-[70vh] flex flex-col pb-safe">
-                  <SheetHeader className="flex-shrink-0">
-                    <SheetTitle>Filters & Options</SheetTitle>
-                    <SheetDescription>Customize your recipe search</SheetDescription>
+                <SheetContent side="bottom" className="max-h-[75vh] flex flex-col px-6 pb-8">
+                  <SheetHeader className="flex-shrink-0 pb-6 pt-2">
+                    <SheetTitle className="text-xl font-semibold">Filters & Options</SheetTitle>
+                    <SheetDescription className="text-sm">Customize your recipe search</SheetDescription>
                   </SheetHeader>
+
                   <div className="flex-1 overflow-y-auto -mx-6 px-6 min-h-0">
-                    <div className="space-y-6 py-4">
+                    <div className="space-y-6 pb-6">
                       {/* Smart Suggestions */}
                       <div className="space-y-3">
                         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
@@ -451,7 +454,7 @@ export function RecipeSelectorSheet({
                       </div>
 
                       {/* Category Filters */}
-                      <div className="space-y-3 pb-4">
+                      <div className="space-y-3">
                         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
                           Meal Type
                         </h3>
@@ -471,16 +474,16 @@ export function RecipeSelectorSheet({
                       </div>
                     </div>
                   </div>
-                  <div className="flex gap-2 pt-4 border-t flex-shrink-0 bg-background">
+                  <div className="flex gap-3 pt-6 border-t flex-shrink-0 bg-background">
                     <Button
                       variant="outline"
                       onClick={clearAllFilters}
-                      className="flex-1 rounded-xl h-11 bg-transparent"
+                      className="flex-1 rounded-xl h-12 bg-transparent"
                       disabled={activeFiltersCount === 0}
                     >
                       Clear All
                     </Button>
-                    <Button onClick={() => setShowFilters(false)} className="flex-1 rounded-xl h-11">
+                    <Button onClick={() => setShowFilters(false)} className="flex-1 rounded-xl h-12">
                       Apply Filters
                     </Button>
                   </div>

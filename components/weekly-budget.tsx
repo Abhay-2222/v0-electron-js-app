@@ -53,22 +53,22 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
   // Editing/Setting budget state
   if (isEditing) {
     return (
-      <Card className="shadow-lg border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-background to-primary/5 animate-pulse-subtle relative overflow-hidden">
-        <div className="absolute top-2 right-2 bg-primary text-primary-foreground text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
-          <Sparkles className="h-3 w-3" />
+      <Card className="shadow-xl border-[3px] border-blue-500 bg-gradient-to-br from-blue-50 via-background to-blue-50 dark:from-blue-950/20 dark:via-background dark:to-blue-950/20 animate-pulse-subtle relative overflow-hidden">
+        <div className="absolute top-3 right-3 bg-gradient-to-r from-orange-500 to-orange-600 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg animate-pulse-subtle">
+          <Sparkles className="h-3.5 w-3.5" />
           Start Here
         </div>
-        <CardContent className="pt-4 pb-4">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center flex-shrink-0 shadow-md">
-              <DollarSign className="h-5 w-5 text-primary-foreground" aria-hidden="true" />
+        <CardContent className="pt-5 pb-5">
+          <div className="flex items-center gap-3">
+            <div className="h-12 w-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+              <DollarSign className="h-6 w-6 text-white" aria-hidden="true" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-bold mb-0.5">Set Your Weekly Budget</p>
+              <p className="text-base font-bold mb-1 text-blue-900 dark:text-blue-100">Set Your Weekly Budget</p>
               <p className="text-xs text-muted-foreground">Start planning your meals and save money</p>
             </div>
           </div>
-          <div className="flex gap-2 mt-3">
+          <div className="flex gap-2 mt-4">
             <div className="relative flex-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm font-medium">
                 $
@@ -78,7 +78,7 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
                 placeholder="100.00"
                 value={budgetInput}
                 onChange={(e) => setBudgetInput(e.target.value)}
-                className="pl-7 h-10 text-base font-medium"
+                className="pl-7 h-11 text-base font-medium border-2 focus:border-blue-500"
                 aria-label="Budget amount"
                 min="0.01"
                 step="0.01"
@@ -89,9 +89,9 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
               onClick={handleSaveBudget}
               disabled={!budgetInput || Number.parseFloat(budgetInput) <= 0}
               aria-label="Save budget"
-              className="h-10 w-10 shadow-md"
+              className="h-11 w-11 shadow-lg bg-blue-600 hover:bg-blue-700"
             >
-              <Check className="h-4 w-4" aria-hidden="true" />
+              <Check className="h-5 w-5" aria-hidden="true" />
             </Button>
             {budget && (
               <Button
@@ -99,9 +99,9 @@ export function WeeklyBudget({ budget, spent = 0, onSetBudget, onRemoveBudget }:
                 variant="ghost"
                 onClick={handleCancelEdit}
                 aria-label="Cancel editing"
-                className="h-10 w-10"
+                className="h-11 w-11"
               >
-                <X className="h-4 w-4" aria-hidden="true" />
+                <X className="h-5 w-5" aria-hidden="true" />
               </Button>
             )}
           </div>
