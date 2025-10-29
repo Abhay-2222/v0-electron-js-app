@@ -103,37 +103,41 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 py-4">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 py-8 max-w-2xl mx-auto w-full">
         {/* Title */}
-        <h1 className="text-2xl text-center text-foreground mb-8 max-w-sm leading-tight">{currentSplash.title}</h1>
+        <h1 className="text-3xl md:text-4xl text-center text-foreground mb-6 leading-tight font-normal">
+          {currentSplash.title}
+        </h1>
 
         {/* Illustration */}
-        <div className="relative w-full max-w-[280px] aspect-square mb-8 flex items-center justify-center">
+        <div className="relative w-full max-w-[320px] md:max-w-[400px] aspect-square mb-6 flex items-center justify-center">
           <div className="absolute inset-0 bg-muted/20 rounded-full blur-3xl scale-75" />
           <Image
             src={currentSplash.image || "/placeholder.svg"}
             alt={currentSplash.title}
-            width={280}
-            height={280}
+            width={400}
+            height={400}
             className="relative z-10 w-full h-full object-contain"
           />
         </div>
 
         {/* Description */}
-        <p className="text-center text-muted-foreground text-sm max-w-sm leading-relaxed">
+        <p className="text-center text-muted-foreground text-base md:text-lg max-w-md leading-relaxed font-normal">
           {currentSplash.description}
         </p>
       </div>
 
       {/* Footer with pagination and button */}
-      <div className="container mx-auto px-6 pb-8 space-y-6">
-        <div className="flex items-center justify-center gap-1.5">
+      <div className="container mx-auto px-6 pb-8 space-y-5 max-w-2xl">
+        <div className="flex items-center justify-center gap-2">
           {splashScreens.map((_, index) => (
             <button
               key={index}
               onClick={() => setCurrentScreen(index)}
-              className={`h-1.5 rounded-full transition-all duration-300 ${
-                index === currentScreen ? "bg-primary w-4" : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5"
+              className={`rounded-full transition-all duration-300 ${
+                index === currentScreen
+                  ? "bg-primary w-2.5 h-2.5"
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2 h-2"
               }`}
               aria-label={`Go to screen ${index + 1}`}
               aria-current={index === currentScreen ? "true" : "false"}
@@ -141,10 +145,9 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
           ))}
         </div>
 
-        {/* Continue button */}
         <Button
           onClick={handleNext}
-          className="w-full max-w-sm mx-auto h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25"
+          className="w-full h-12 text-base bg-primary hover:bg-primary/90 text-primary-foreground font-normal"
           size="lg"
         >
           {currentScreen < splashScreens.length - 1 ? "Continue" : "Get Started"}
