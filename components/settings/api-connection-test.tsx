@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -17,16 +17,20 @@ interface ConnectionStatus {
 export function APIConnectionTest() {
   const [testing, setTesting] = useState(false)
   const [status, setStatus] = useState<ConnectionStatus | null>(null)
+  const [hasAutoTested, setHasAutoTested] = useState(false)
 
   const testConnection = async () => {
     setTesting(true)
     setStatus(null)
 
     try {
+      console.log("[v0] Testing Instacart API connection from UI...")
       const response = await fetch("/api/instacart/test-connection")
       const data = await response.json()
+      console.log("[v0] Connection test result:", data)
       setStatus(data)
     } catch (error) {
+      console.error("[v0] Connection test error:", error)
       setStatus({
         success: false,
         message: "Failed to connect to API. Please check your network connection.",
@@ -36,6 +40,14 @@ export function APIConnectionTest() {
       setTesting(false)
     }
   }
+
+  useEffect(() => {
+    if (!hasAutoTested) {
+      console.log("[v0] Auto-testing Instacart connection on mount...")
+      setHasAutoTested(true)
+      testConnection()
+    }
+  }, [hasAutoTested])
 
   return (
     <Card>
@@ -79,6 +91,11 @@ export function APIConnectionTest() {
         {status && (
           <div className="rounded-lg border p-4 space-y-2">
             <p className="text-sm font-normal">{status.message}</p>
+            {status.success && status.environment && (
+              <p className="text-sm text-muted-foreground">
+                Environment: <span className="font-medium">{status.environment}</span>
+              </p>
+            )}
             {status.success && status.storesFound !== undefined && (
               <p className="text-sm text-muted-foreground">Found {status.storesFound} stores in test area</p>
             )}
