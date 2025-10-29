@@ -106,19 +106,18 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
       <div className="flex-1 overflow-y-auto overflow-x-hidden">
         <div className="flex flex-col items-center justify-center px-6 py-8 pb-32 max-w-2xl mx-auto w-full min-h-full">
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl text-center text-foreground mb-6 leading-tight font-normal">
+          <h1 className="text-3xl md:text-4xl text-center text-foreground mb-8 leading-tight font-normal">
             {currentSplash.title}
           </h1>
 
           {/* Illustration */}
-          <div className="relative w-full max-w-[320px] md:max-w-[400px] aspect-square mb-6 flex items-center justify-center">
-            <div className="absolute inset-0 bg-muted/20 rounded-full blur-3xl scale-75" />
+          <div className="relative w-full max-w-[320px] md:max-w-[400px] aspect-square mb-8 flex items-center justify-center">
             <Image
               src={currentSplash.image || "/placeholder.svg"}
               alt={currentSplash.title}
               width={400}
               height={400}
-              className="relative z-10 w-full h-full object-contain"
+              className="relative z-10 w-full h-full object-cover rounded-2xl shadow-lg"
             />
           </div>
 
@@ -132,6 +131,7 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
       {/* Footer with pagination and button - fixed at bottom */}
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/40 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-5 max-w-2xl">
+          {/* Pagination dots */}
           <div className="flex items-center justify-center gap-2">
             {splashScreens.map((_, index) => (
               <button
@@ -139,8 +139,8 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
                 onClick={() => setCurrentScreen(index)}
                 className={`rounded-full transition-all duration-300 ${
                   index === currentScreen
-                    ? "bg-primary w-2.5 h-2.5"
-                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-2 h-2"
+                    ? "w-3 h-3 bg-primary border-2 border-primary"
+                    : "w-3 h-3 bg-transparent border-2 border-muted-foreground/40 hover:border-muted-foreground/60"
                 }`}
                 aria-label={`Go to screen ${index + 1}`}
                 aria-current={index === currentScreen ? "true" : "false"}

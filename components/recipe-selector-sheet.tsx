@@ -27,7 +27,6 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSuggestedRecipes, wasRecentlyEaten, getMealEatenCount } from "@/lib/meal-utils"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
-import AIRecipeGenerator from "@/components/ai-recipe-generator"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { RecipeDetailSheet } from "@/components/recipe-detail-sheet"
 import { isMobileDevice } from "@/lib/mobile-utils"
@@ -67,8 +66,8 @@ export function RecipeSelectorSheet({
   const [showAPIResults, setShowAPIResults] = useState(false)
   const [showingSuggestions, setShowingSuggestions] = useState(false)
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null)
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const [diverseRecipesLoaded, setDiverseRecipesLoaded] = useState(false)
   const { toast } = useToast()
   const [selectedRecipeForDetail, setSelectedRecipeForDetail] = useState<Recipe | null>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -125,6 +124,43 @@ export function RecipeSelectorSheet({
   console.log("[v0] showingSuggestions:", showingSuggestions)
   if (suggestionStats) {
     console.log("[v0] Smart suggestions active:", suggestionStats)
+  }
+
+  useEffect(() => {
+    if (isOpen && !diverseRecipesLoaded && !searchQuery.trim()) {
+      loadDiverseRecipes()
+    }
+  }, [isOpen])
+
+  const loadDiverseRecipes = async () => {
+    console.log("[v0] Loading diverse recipes on open")
+    setIsSearchingAPI(true)
+    setShowAPIResults(true)
+    setDiverseRecipesLoaded(true)
+
+    try {
+      const params = new URLSearchParams({ diverse: "true" })
+      if (mealType) {
+        params.append("mealType", mealType)
+      }
+
+      const response = await fetch(`/api/recipes/search?${params}`)
+
+      if (!response.ok) {
+        throw new Error("Failed to load diverse recipes")
+      }
+
+      const data = await response.json()
+      console.log("[v0] Diverse recipes loaded:", data.recipes?.length || 0)
+      setApiRecipes(data.recipes || [])
+    } catch (error) {
+      console.error("[v0] Failed to load diverse recipes:", error)
+      // Silently fail and show user's saved recipes instead
+      setShowAPIResults(false)
+      setDiverseRecipesLoaded(false)
+    } finally {
+      setIsSearchingAPI(false)
+    }
   }
 
   useEffect(() => {
@@ -193,11 +229,7 @@ export function RecipeSelectorSheet({
       if (data.recipes?.length === 0) {
         toast({
           title: "No recipes found",
-          description: "Try using AI to generate a custom recipe for your search",
-          action: {
-            label: "Generate with AI",
-            onClick: () => setShowAIGenerator(true),
-          },
+          description: "Try a different search term or adjust your filters",
         })
       } else if (data.isSuggestion) {
         toast({
@@ -225,18 +257,6 @@ export function RecipeSelectorSheet({
     } finally {
       setIsSearchingAPI(false)
     }
-  }
-
-  const handleAIRecipeGenerated = (recipe: Recipe) => {
-    console.log("[v0] AI recipe generated:", recipe.name)
-    if (onAddRecipeToLibrary) {
-      onAddRecipeToLibrary(recipe)
-    }
-    setShowAIGenerator(false)
-    toast({
-      title: "Recipe generated!",
-      description: "Your custom AI recipe has been added to your library",
-    })
   }
 
   const handleSelectRecipe = (recipe: Recipe) => {
@@ -434,18 +454,6 @@ export function RecipeSelectorSheet({
                         >
                           <Sparkles className={`h-4 w-4 mr-2 ${showSuggestions ? "animate-pulse" : ""}`} />
                           {showSuggestions ? "Smart Suggestions On" : "Enable Smart Suggestions"}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="lg"
-                          onClick={() => {
-                            setShowAIGenerator(true)
-                            setShowFilters(false)
-                          }}
-                          className="w-full rounded-xl h-12 justify-start border-2 border-primary/20"
-                        >
-                          <Sparkles className="h-4 w-4 mr-2 text-primary" />
-                          Generate Custom Recipe with AI
                         </Button>
                       </div>
 
@@ -747,19 +755,6 @@ export function RecipeSelectorSheet({
           currentMeal={currentMeal}
         />
       )}
-
-      <Dialog open={showAIGenerator} onOpenChange={setShowAIGenerator}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Generate Custom Recipe with AI</DialogTitle>
-          </DialogHeader>
-          <AIRecipeGenerator
-            onRecipeGenerated={handleAIRecipeGenerated}
-            initialPrompt={searchQuery}
-            mealType={mealType}
-          />
-        </DialogContent>
-      </Dialog>
     </>
   )
 }

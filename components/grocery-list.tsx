@@ -5,14 +5,13 @@ import type { MealPlan, Ingredient, PantryItem, InstacartStore, DeliveryTimeSlot
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import {
   ShoppingCart,
   Download,
   Share2,
   MessageCircle,
   Mail,
-  ExternalLink,
-  Store,
   ChevronDown,
   ChevronUp,
   Apple,
@@ -21,14 +20,16 @@ import {
   Package,
   Snowflake,
   MoreHorizontal,
+  Search,
 } from "lucide-react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Progress } from "@/components/ui/progress"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { calculateIngredientCost } from "@/lib/ingredient-prices"
-import { useToast } from "@/hooks/use-toast"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { openMobileFriendlyURL } from "@/lib/mobile-utils"
+import { useToast } from "@/hooks/use-toast"
+import { Store, ExternalLink } from "@/components/icons"
+import { calculateIngredientCost } from "@/lib/ingredient-utils" // Import calculateIngredientCost
 
 interface GroceryListProps {
   mealPlan: MealPlan
@@ -65,6 +66,7 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
   const [selectedStore, setSelectedStore] = useState<InstacartStore | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<DeliveryTimeSlot | null>(null)
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
+  const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
 
   const groceryList = useMemo(() => {
@@ -115,6 +117,17 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
         items: grouped[cat].sort((a, b) => a.name.localeCompare(b.name)),
       }))
   }, [mealPlan, checkedItems, pantryItems])
+
+  const filteredGroceryList = useMemo(() => {
+    if (!searchQuery.trim()) return groceryList
+
+    return groceryList
+      .map((group) => ({
+        ...group,
+        items: group.items.filter((item) => item.name.toLowerCase().includes(searchQuery.toLowerCase())),
+      }))
+      .filter((group) => group.items.length > 0)
+  }, [groceryList, searchQuery])
 
   const handleToggleItem = (itemId: string) => {
     setCheckedItems((prev) => {
@@ -209,11 +222,15 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
       console.log("[v0] Shopping list created successfully:", data)
 
       if (data.url) {
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
+
         toast({
           title: "Shopping List Created!",
-          description: "Opening Instacart to complete your order...",
+          description: isMobile ? "Opening in Instacart app..." : "Opening Instacart in a new tab...",
         })
 
+        // This will open the Instacart mobile app if installed (via universal links),
+        // or fall back to the web version
         openMobileFriendlyURL(data.url)
       } else {
         throw new Error("No URL returned from Instacart")
@@ -254,103 +271,121 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     return (
       <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30">
         <CardHeader>
-          <CardTitle className="text-xl sm:text-2xl">Grocery</CardTitle>
+          <CardTitle className="text-xl sm:text-2xl font-bold">Groceries</CardTitle>
         </CardHeader>
         <CardContent className="py-16 text-center text-muted-foreground">
           <ShoppingCart className="h-16 w-16 mx-auto mb-4 opacity-30" aria-hidden="true" />
-          <p className="text-base px-4 text-balance">
-            Plan your meals in the Planner tab to automatically generate your grocery list
-          </p>
+          <p className="text-base px-4">Add recipes to your meal plan to generate a grocery list</p>
         </CardContent>
       </Card>
     )
   }
 
   return (
-    <>
-      <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30 w-full">
-        <CardHeader className="pb-5 space-y-4">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-xl sm:text-2xl">Grocery</CardTitle>
-            <div className="flex gap-1.5 sm:gap-2 shrink-0">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl bg-transparent text-xs sm:text-sm px-2 sm:px-3"
-                    aria-label="Share grocery list"
-                  >
-                    <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" aria-hidden="true" />
-                    <span className="hidden sm:inline">Share</span>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleShare("whatsapp")}>
-                    <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                    WhatsApp
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleShare("sms")}>
-                    <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                    SMS
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleShare("email")}>
-                    <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Email
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExport}
-                className="rounded-xl bg-transparent text-xs sm:text-sm px-2 sm:px-3"
-                aria-label="Export grocery list as text file"
-              >
-                <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" aria-hidden="true" />
-                <span className="hidden sm:inline">Export</span>
-              </Button>
-            </div>
+    <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30 w-full">
+      <CardHeader className="pb-5 space-y-4">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="text-xl sm:text-2xl font-bold">Groceries</CardTitle>
+          <div className="flex gap-1.5 sm:gap-2 shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-xl bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+                  aria-label="Share grocery list"
+                >
+                  <Share2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" aria-hidden="true" />
+                  <span className="hidden sm:inline">Share</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleShare("whatsapp")}>
+                  <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                  WhatsApp
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare("sms")}>
+                  <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
+                  SMS
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleShare("email")}>
+                  <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
+                  Email
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExport}
+              className="rounded-xl bg-transparent text-xs sm:text-sm px-2 sm:px-3"
+              aria-label="Export grocery list as text file"
+            >
+              <Download className="h-3.5 w-3.5 sm:h-4 sm:w-4 sm:mr-2" aria-hidden="true" />
+              <span className="hidden sm:inline">Export</span>
+            </Button>
           </div>
-          <div className="flex items-center justify-between px-1 gap-2">
-            <span className="text-xs sm:text-sm text-muted-foreground">Estimated Total</span>
-            <span className="text-xl sm:text-2xl text-primary">${totalEstimatedCost.toFixed(2)}</span>
+        </div>
+
+        <div className="relative">
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            placeholder="Search ingredients..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+            aria-label="Search ingredients"
+          />
+        </div>
+
+        <div className="flex items-center justify-between px-1 gap-2">
+          <span className="text-xs sm:text-sm text-muted-foreground font-medium">Estimated Total</span>
+          <span className="text-xl sm:text-2xl font-bold text-primary">${totalEstimatedCost.toFixed(2)}</span>
+        </div>
+        <div className="space-y-2" role="status" aria-label="Shopping progress">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground font-medium">
+              {checkedCount} of {totalItems} items
+            </span>
+            <span className="font-semibold">{Math.round(completionPercentage)}%</span>
           </div>
-          <div className="space-y-2" role="status" aria-label="Shopping progress">
-            <div className="flex items-center justify-between text-xs sm:text-sm">
-              <span className="text-muted-foreground">
-                {checkedCount} of {totalItems} items
-              </span>
-              <span>{Math.round(completionPercentage)}%</span>
-            </div>
-            <Progress
-              value={completionPercentage}
-              className="h-2.5"
-              aria-label={`${Math.round(completionPercentage)}% complete`}
-            />
+          <Progress
+            value={completionPercentage}
+            className="h-2.5"
+            aria-label={`${Math.round(completionPercentage)}% complete`}
+          />
+        </div>
+        <Button
+          onClick={handleOrderInstacart}
+          disabled={isOrderingInstacart}
+          className="w-full rounded-xl bg-[#0AAD0A] hover:bg-[#099209] text-white shadow-md"
+          size="lg"
+        >
+          {isOrderingInstacart ? (
+            <>
+              <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              Creating Order...
+            </>
+          ) : (
+            <>
+              <Store className="h-4 w-4 mr-2" aria-hidden="true" />
+              Order with Instacart
+              <ExternalLink className="h-3.5 w-3.5 ml-2" aria-hidden="true" />
+            </>
+          )}
+        </Button>
+      </CardHeader>
+      <CardContent className="space-y-6" role="region" aria-label="Grocery items by category">
+        {filteredGroceryList.length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground">
+            <Search className="h-12 w-12 mx-auto mb-3 opacity-50" aria-hidden="true" />
+            <p className="text-sm">No ingredients match your search.</p>
           </div>
-          <Button
-            onClick={handleOrderInstacart}
-            disabled={isOrderingInstacart}
-            className="w-full rounded-xl bg-[#0AAD0A] hover:bg-[#099209] text-white shadow-md"
-            size="lg"
-          >
-            {isOrderingInstacart ? (
-              <>
-                <div className="h-4 w-4 mr-2 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Creating Order...
-              </>
-            ) : (
-              <>
-                <Store className="h-4 w-4 mr-2" aria-hidden="true" />
-                Order with Instacart
-                <ExternalLink className="h-3.5 w-3.5 ml-2" aria-hidden="true" />
-              </>
-            )}
-          </Button>
-        </CardHeader>
-        <CardContent className="space-y-4" role="region" aria-label="Grocery items by category">
-          {groceryList.map((group) => {
+        ) : (
+          filteredGroceryList.map((group) => {
             const categoryTotal = group.items.reduce((sum, item) => sum + item.estimatedCost, 0)
             const categoryChecked = group.items.filter((item) => checkedItems.has(item.id)).length
             const isCollapsed = collapsedCategories.has(group.category)
@@ -381,12 +416,9 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
                 </div>
 
                 <CollapsibleContent>
-                  <div className="space-y-3 pl-2" role="group" aria-label={`${group.category} items`}>
+                  <div className="space-y-4" role="group" aria-label={`${group.category} items`}>
                     {group.items.map((item) => (
-                      <div
-                        key={item.id}
-                        className="flex items-center gap-3 sm:gap-4 py-2 px-3 rounded-lg hover:bg-muted/30 transition-colors"
-                      >
+                      <div key={item.id} className="flex items-center gap-3 sm:gap-4 py-1">
                         <Checkbox
                           id={item.id}
                           checked={checkedItems.has(item.id)}
@@ -401,11 +433,11 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
                           }`}
                         >
                           <span className="font-medium">{item.name}</span>
-                          <span className="text-muted-foreground ml-2 text-xs sm:text-sm font-normal">
+                          <span className="text-muted-foreground ml-2 text-xs sm:text-sm">
                             {item.amount} {item.unit}
                           </span>
                         </label>
-                        <span className="text-sm font-medium text-muted-foreground whitespace-nowrap shrink-0">
+                        <span className="text-xs sm:text-sm text-muted-foreground font-semibold whitespace-nowrap shrink-0">
                           ${item.estimatedCost.toFixed(2)}
                         </span>
                       </div>
@@ -414,9 +446,9 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
                 </CollapsibleContent>
               </Collapsible>
             )
-          })}
-        </CardContent>
-      </Card>
-    </>
+          })
+        )}
+      </CardContent>
+    </Card>
   )
 }

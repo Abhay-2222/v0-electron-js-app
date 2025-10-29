@@ -97,7 +97,6 @@ export async function POST(request: NextRequest) {
       ingredients: formattedIngredients,
       landing_page_configuration: {
         enable_pantry_items: true,
-        partner_linkback_url: process.env.NEXT_PUBLIC_APP_URL || "https://your-app.vercel.app",
       },
       expires_in: 365, // Cache for 1 year as recommended
     }

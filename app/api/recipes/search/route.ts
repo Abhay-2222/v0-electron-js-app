@@ -39,8 +39,30 @@ export async function GET(request: Request) {
   const query = searchParams.get("query")
   const diet = searchParams.get("diet")
   const type = searchParams.get("type")
+  const diverse = searchParams.get("diverse") === "true"
+  const mealType = searchParams.get("mealType")
 
-  console.log("[v0] Search params:", { query, diet, type })
+  console.log("[v0] Search params:", { query, diet, type, diverse, mealType })
+
+  if (diverse && !query) {
+    try {
+      const diverseRecipes = await fetchDiverseRecipes(mealType || undefined)
+      console.log("[v0] Diverse recipes found:", diverseRecipes.length)
+
+      return NextResponse.json({
+        recipes: diverseRecipes,
+        isSuggestion: false,
+      })
+    } catch (error) {
+      console.error("[v0] Diverse recipe fetch error:", error)
+      return NextResponse.json(
+        {
+          error: "Failed to fetch diverse recipes. Please try again.",
+        },
+        { status: 500 },
+      )
+    }
+  }
 
   if (!query) {
     return NextResponse.json({ error: "Query parameter is required" }, { status: 400 })
@@ -283,11 +305,25 @@ async function searchRecipePuppy(query: string): Promise<any[]> {
     const response = await fetch(searchUrl)
 
     if (!response.ok) {
-      console.log("[v0] Recipe Puppy - Request failed")
+      console.log("[v0] Recipe Puppy - Request failed with status:", response.status)
       return []
     }
 
-    const data = await response.json()
+    const contentType = response.headers.get("content-type")
+    if (!contentType || !contentType.includes("application/json")) {
+      console.log("[v0] Recipe Puppy - Response is not JSON, content-type:", contentType)
+      return []
+    }
+
+    const text = await response.text()
+
+    // Check if the response looks like JSON
+    if (!text.trim().startsWith("{") && !text.trim().startsWith("[")) {
+      console.log("[v0] Recipe Puppy - Response is not valid JSON format")
+      return []
+    }
+
+    const data = JSON.parse(text)
     const results = data.results || []
 
     console.log("[v0] Recipe Puppy - Found:", results.length)
@@ -351,4 +387,91 @@ function mapMealCategory(category: string): "breakfast" | "lunch" | "dinner" | "
   if (lower.includes("breakfast")) return "breakfast"
   if (lower.includes("dessert") || lower.includes("starter")) return "snack"
   return "dinner"
+}
+
+async function fetchDiverseRecipes(mealType?: string): Promise<any[]> {
+  console.log("[v0] Fetching 50 healthy recipes for meal type:", mealType || "all")
+
+  // Define healthy categories - 70% of our mix
+  const healthyCategories = ["Vegetarian", "Seafood", "Chicken", "Vegan"]
+
+  // Define healthy areas/cuisines
+  const healthyAreas = ["Japanese", "Thai", "Mediterranean", "Greek", "Vietnamese"]
+
+  // Define breakfast-specific searches
+  const breakfastSearches = ["oatmeal", "eggs", "smoothie", "yogurt", "avocado toast", "granola"]
+
+  const searches: Promise<any[]>[] = []
+
+  // Fetch based on meal type
+  if (mealType === "breakfast") {
+    // For breakfast, search for breakfast-specific healthy items
+    for (const term of breakfastSearches) {
+      searches.push(searchTheMealDB(term))
+    }
+    // Also get some vegetarian breakfast options
+    searches.push(fetchByCategory("Breakfast"))
+    searches.push(fetchByCategory("Vegetarian"))
+  } else {
+    // For lunch/dinner, focus on healthy categories
+    for (const category of healthyCategories) {
+      searches.push(fetchByCategory(category))
+    }
+
+    // Add some healthy cuisine areas
+    for (const area of healthyAreas.slice(0, 3)) {
+      searches.push(fetchByArea(area))
+    }
+  }
+
+  const results = await Promise.all(searches)
+  const allMeals = results.flat()
+
+  // Deduplicate
+  const uniqueMeals = deduplicateMeals(allMeals)
+
+  // Shuffle for variety
+  const shuffled = uniqueMeals.sort(() => Math.random() - 0.5)
+
+  // Return up to 50 healthy recipes
+  const selectedMeals = shuffled.slice(0, 50)
+
+  console.log("[v0] Selected", selectedMeals.length, "healthy recipes for", mealType || "all meals")
+
+  // Convert to recipe format
+  return selectedMeals.map((meal: any) => {
+    const ingredients = []
+    for (let i = 1; i <= 20; i++) {
+      const ingredient = meal[`strIngredient${i}`]
+      const measure = meal[`strMeasure${i}`]
+      if (ingredient && ingredient.trim()) {
+        ingredients.push({
+          id: `ing-${meal.idMeal}-${i}`,
+          name: ingredient.trim(),
+          amount: Number.parseFloat(measure) || 1,
+          unit: measure?.replace(/[0-9.]/g, "").trim() || "unit",
+          category: categorizeIngredient(ingredient.trim()),
+        })
+      }
+    }
+
+    return {
+      id: `mealdb-${meal.idMeal}`,
+      name: meal.strMeal,
+      category: mapMealCategory(meal.strCategory),
+      diet: "classic" as const,
+      prepTime: 15,
+      cookTime: 30,
+      servings: 4,
+      ingredients,
+      instructions: meal.strInstructions?.split("\n").filter((s: string) => s.trim()) || [],
+      image: meal.strMealThumb,
+      nutrition: {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fat: 0,
+      },
+    }
+  })
 }

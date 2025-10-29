@@ -9,7 +9,7 @@ import { Loader2, CheckCircle2, XCircle, RefreshCw } from "lucide-react"
 interface ConnectionStatus {
   success: boolean
   message: string
-  storesFound?: number
+  retailersFound?: number
   apiKeyConfigured?: boolean
   environment?: string
 }
@@ -96,8 +96,8 @@ export function APIConnectionTest() {
                 Environment: <span className="font-medium">{status.environment}</span>
               </p>
             )}
-            {status.success && status.storesFound !== undefined && (
-              <p className="text-sm text-muted-foreground">Found {status.storesFound} stores in test area</p>
+            {status.success && status.retailersFound !== undefined && (
+              <p className="text-sm text-muted-foreground">Found {status.retailersFound} retailers in test area</p>
             )}
             {!status.success && !status.apiKeyConfigured && (
               <div className="mt-3 p-3 bg-muted rounded-md">
