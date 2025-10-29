@@ -34,26 +34,33 @@ export function StoreSelectorDialog({ open, onClose, onSelectStore }: StoreSelec
 
     setLoading(true)
     try {
-      const response = await fetch("/api/instacart/stores", {
-        method: "POST",
+      console.log("[v0] Fetching Instacart stores for ZIP:", zipCode)
+
+      const response = await fetch(`/api/instacart/stores?postal_code=${zipCode}&country_code=US`, {
+        method: "GET",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zipCode }),
       })
 
       if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        console.error("[v0] Failed to fetch stores:", errorData)
         throw new Error("Failed to fetch stores")
       }
 
       const data = await response.json()
-      setStores(data.stores)
+      console.log("[v0] Received stores:", data.retailers?.length || 0)
 
-      if (data.stores.length === 0) {
+      const storeList = data.retailers || []
+      setStores(storeList)
+
+      if (storeList.length === 0) {
         toast({
           title: "No stores found",
           description: "No Instacart stores available in your area",
         })
       }
     } catch (error) {
+      console.error("[v0] Store fetch error:", error)
       toast({
         title: "Error",
         description: "Failed to fetch stores. Please try again.",

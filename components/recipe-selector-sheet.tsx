@@ -22,6 +22,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { getSuggestedRecipes, wasRecentlyEaten, getMealEatenCount } from "@/lib/meal-utils"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
+import AIRecipeGenerator from "@/components/ai-recipe-generator"
 
 interface RecipeSelectorSheetProps {
   recipes: Recipe[]
@@ -58,6 +59,7 @@ export function RecipeSelectorSheet({
   const [showAPIResults, setShowAPIResults] = useState(false)
   const [showingSuggestions, setShowingSuggestions] = useState(false)
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null)
+  const [showAIGenerator, setShowAIGenerator] = useState(false)
   const { toast } = useToast()
 
   const categories = ["all", ...Array.from(new Set(recipes.map((r) => r.category)))]
@@ -151,50 +153,53 @@ export function RecipeSelectorSheet({
       setApiRecipes(data.recipes || [])
       setShowingSuggestions(data.isSuggestion && data.recipes?.length > 0)
 
-      if (data.recipes?.length > 0) {
-        if (data.isSuggestion) {
-          toast({
-            title: "No exact matches found",
-            description: `Showing ${data.recipes.length} similar recipes you might like`,
-          })
-        } else {
-          toast({
-            title: "Search complete",
-            description: `Found ${data.recipes.length} recipes`,
-          })
-        }
-      } else {
+      if (data.recipes?.length === 0) {
         toast({
           title: "No recipes found",
-          description: "Try a different search term or browse your saved recipes",
+          description: "Try using AI to generate a custom recipe for your search",
+          action: {
+            label: "Generate with AI",
+            onClick: () => setShowAIGenerator(true),
+          },
+        })
+      } else if (data.isSuggestion) {
+        toast({
+          title: "No exact matches found",
+          description: `Showing ${data.recipes.length} similar recipes you might like`,
+        })
+      } else {
+        toast({
+          title: "Search complete",
+          description: `Found ${data.recipes.length} recipes`,
         })
       }
     } catch (error) {
       console.error("[v0] API search error:", error)
       const errorMessage = error instanceof Error ? error.message : "Could not search recipes"
 
-      if (errorMessage.includes("quota") || errorMessage.includes("OpenAI")) {
-        setApiErrorMessage(
-          "OpenAI API quota exceeded. Using free recipe database (limited results). Add credits at platform.openai.com to unlock AI-powered recipe search.",
-        )
-        toast({
-          title: "Using free recipe database",
-          description: "OpenAI quota exceeded. Results may be limited.",
-          variant: "destructive",
-        })
-      } else {
-        toast({
-          title: "Search failed",
-          description: errorMessage,
-          variant: "destructive",
-        })
-      }
+      toast({
+        title: "Search failed",
+        description: errorMessage,
+        variant: "destructive",
+      })
 
       setApiRecipes([])
       setShowingSuggestions(false)
     } finally {
       setIsSearchingAPI(false)
     }
+  }
+
+  const handleAIRecipeGenerated = (recipe: Recipe) => {
+    console.log("[v0] AI recipe generated:", recipe.name)
+    if (onAddRecipeToLibrary) {
+      onAddRecipeToLibrary(recipe)
+    }
+    setShowAIGenerator(false)
+    toast({
+      title: "Recipe generated!",
+      description: "Your custom AI recipe has been added to your library",
+    })
   }
 
   const handleSelectRecipe = (recipe: Recipe) => {
@@ -317,8 +322,6 @@ export function RecipeSelectorSheet({
               </Button>
             </div>
 
-            {/* ... existing API results message ... */}
-
             {!showAPIResults && (
               <Button
                 variant={showSuggestions ? "default" : "outline"}
@@ -375,6 +378,16 @@ export function RecipeSelectorSheet({
                 </Button>
               ))}
             </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAIGenerator(true)}
+              className="w-full rounded-xl h-10 border-2 border-primary/20 hover:border-primary transition-all"
+            >
+              <Sparkles className="h-4 w-4 mr-2 text-primary" aria-hidden="true" />
+              Generate Custom Recipe with AI
+            </Button>
           </div>
 
           <ScrollArea className="flex-1 px-5 overflow-y-auto">
@@ -452,10 +465,59 @@ export function RecipeSelectorSheet({
                       </div>
                     </button>
 
-                    {/* ... existing preview section ... */}
+                    {previewRecipe?.id === recipe.id && (
+                      <div className="mx-1 p-4 rounded-xl border-2 border-primary/20 bg-accent/50 space-y-4">
+                        <div className="space-y-3">
+                          <div>
+                            <h4 className="font-semibold text-sm mb-2">Ingredients</h4>
+                            <ul className="text-sm space-y-1 text-muted-foreground">
+                              {recipe.ingredients.slice(0, 8).map((ing, idx) => (
+                                <li key={idx} className="flex items-start gap-2">
+                                  <span className="text-primary mt-0.5">•</span>
+                                  <span>
+                                    {ing.amount} {ing.unit} {ing.name}
+                                  </span>
+                                </li>
+                              ))}
+                              {recipe.ingredients.length > 8 && (
+                                <li className="text-xs italic">+{recipe.ingredients.length - 8} more ingredients</li>
+                              )}
+                            </ul>
+                          </div>
+
+                          {recipe.instructions && recipe.instructions.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-sm mb-2">Instructions</h4>
+                              <ol className="text-sm space-y-2 text-muted-foreground list-decimal list-inside">
+                                {recipe.instructions.slice(0, 3).map((step, idx) => (
+                                  <li key={idx} className="leading-relaxed">
+                                    {step}
+                                  </li>
+                                ))}
+                                {recipe.instructions.length > 3 && (
+                                  <li className="text-xs italic">+{recipe.instructions.length - 3} more steps</li>
+                                )}
+                              </ol>
+                            </div>
+                          )}
+                        </div>
+
+                        <Button
+                          onClick={() => {
+                            console.log("[v0] Add button clicked for recipe:", recipe.name)
+                            handleSelectRecipe(recipe)
+                          }}
+                          className="w-full rounded-xl h-11 text-base font-semibold shadow-md hover:shadow-lg transition-all"
+                          size="lg"
+                        >
+                          Add to {currentMeal || "Meal Plan"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 )
               })}
+
               {isSearchingAPI && (
                 <div className="text-center py-16">
                   <div className="relative inline-block">
@@ -507,7 +569,18 @@ export function RecipeSelectorSheet({
         </DialogContent>
       </Dialog>
 
-      {/* ... existing alert dialog ... */}
+      <Dialog open={showAIGenerator} onOpenChange={setShowAIGenerator}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Generate Custom Recipe with AI</DialogTitle>
+          </DialogHeader>
+          <AIRecipeGenerator
+            onRecipeGenerated={handleAIRecipeGenerated}
+            initialPrompt={searchQuery}
+            mealType={mealType}
+          />
+        </DialogContent>
+      </Dialog>
     </>
   )
 }

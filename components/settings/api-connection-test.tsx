@@ -11,6 +11,7 @@ interface ConnectionStatus {
   message: string
   storesFound?: number
   apiKeyConfigured?: boolean
+  environment?: string
 }
 
 export function APIConnectionTest() {
@@ -77,20 +78,25 @@ export function APIConnectionTest() {
 
         {status && (
           <div className="rounded-lg border p-4 space-y-2">
-            <p className="text-sm font-medium">{status.message}</p>
+            <p className="text-sm font-normal">{status.message}</p>
             {status.success && status.storesFound !== undefined && (
               <p className="text-sm text-muted-foreground">Found {status.storesFound} stores in test area</p>
             )}
             {!status.success && !status.apiKeyConfigured && (
               <div className="mt-3 p-3 bg-muted rounded-md">
-                <p className="text-sm font-medium mb-2">How to add your API key:</p>
-                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                <p className="text-sm font-normal mb-2">How to add your API key:</p>
+                <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside font-normal">
                   <li>Click "Vars" in the left sidebar</li>
                   <li>Click "Add Variable"</li>
                   <li>Name: INSTACART_API_KEY</li>
-                  <li>Value: Your Instacart API key</li>
+                  <li>Value: Your Instacart IDP API key (get it from the Instacart Developer Portal)</li>
+                  <li>Optional: Add INSTACART_ENVIRONMENT with value "development" (default) or "production"</li>
                   <li>Click "Save" and test again</li>
                 </ol>
+                <p className="text-xs text-muted-foreground mt-2 font-normal">
+                  Note: By default, the app uses the development environment (connect.dev.instacart.tools). Make sure
+                  your API key matches the environment.
+                </p>
               </div>
             )}
           </div>

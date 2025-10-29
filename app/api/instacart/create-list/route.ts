@@ -13,20 +13,20 @@ interface CreateListRequest {
     amount: number
     unit: string
   }>
+  title?: string
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const { items } = validateRequestBody<CreateListRequest>(body, ["items"])
+    const { items, title } = validateRequestBody<CreateListRequest>(body, ["items"])
 
     if (!Array.isArray(items) || items.length === 0) {
       throw new APIError("Items must be a non-empty array", 400)
     }
 
     const apiKey = getEnvVar("INSTACART_API_KEY")
-    const partnerId = getEnvVar("INSTACART_PARTNER_ID", false)
 
     // Format items for Instacart API
     const lineItems: LineItem[] = items.map((item) => ({
@@ -35,34 +35,48 @@ export async function POST(request: NextRequest) {
       unit: item.unit,
     }))
 
-    const apiEndpoint = "https://api.instacart.com/idp/v1/products/products_link"
+    const listTitle = title || `Meal Plan Shopping List - ${new Date().toLocaleDateString()}`
+
+    console.log("[v0] Creating Instacart shopping list:", listTitle, "with", lineItems.length, "items")
+
+    const environment = getEnvVar("INSTACART_ENVIRONMENT", false) || "development"
+    const baseUrl =
+      environment === "production" ? "https://connect.instacart.com" : "https://connect.dev.instacart.tools"
 
     const response = await fetchWithTimeout(
-      apiEndpoint,
+      `${baseUrl}/idp/v1/products/products_link`,
       {
         method: "POST",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
-          ...(partnerId && { "X-Instacart-Partner-Id": partnerId }),
         },
-        body: JSON.stringify({ line_items: lineItems }),
+        body: JSON.stringify({
+          title: listTitle,
+          line_items: lineItems,
+        }),
       },
       15000,
     )
 
+    console.log("[v0] Instacart create list response status:", response.status)
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}))
+      console.log("[v0] Instacart create list error:", errorData)
       throw new APIError("Failed to create Instacart shopping list", response.status, errorData)
     }
 
     const data = await response.json()
+    console.log("[v0] Instacart shopping list created successfully")
 
     return NextResponse.json({
-      url: data.url || data.shopping_list_url,
+      url: data.url || data.shopping_list_url || data.products_link_url,
       success: true,
     })
   } catch (error) {
+    console.error("[v0] Instacart create list error:", error)
     return handleAPIError(error)
   }
 }

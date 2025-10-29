@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
     })
 
     const response = await fetchWithTimeout(
-      `https://api.instacart.com/v2/fulfillment/service_options?${params.toString()}`,
+      `https://connect.instacart.com/v2/fulfillment/service_options?${params.toString()}`,
       {
         method: "GET",
         headers: {
+          Accept: "application/json",
           "Content-Type": "application/json",
           Authorization: `Bearer ${apiKey}`,
         },

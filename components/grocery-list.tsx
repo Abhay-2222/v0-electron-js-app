@@ -27,8 +27,6 @@ import { Progress } from "@/components/ui/progress"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { calculateIngredientCost } from "@/lib/ingredient-prices"
 import { useToast } from "@/hooks/use-toast"
-import { StoreSelectorDialog } from "@/components/instacart/store-selector-dialog"
-import { DeliverySchedulerDialog } from "@/components/instacart/delivery-scheduler-dialog"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 
 interface GroceryListProps {
@@ -187,58 +185,43 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
       return
     }
 
-    setShowStoreSelector(true)
-  }
-
-  const handleStoreSelected = (store: InstacartStore) => {
-    setSelectedStore(store)
-    setShowDeliveryScheduler(true)
-  }
-
-  const handleSlotSelected = async (slot: DeliveryTimeSlot) => {
-    setSelectedSlot(slot)
     setIsOrderingInstacart(true)
 
     try {
-      const uncheckedItems = groceryList.flatMap((group) =>
-        group.items
-          .filter((item) => !checkedItems.has(item.id))
-          .map((item) => ({
-            name: item.name,
-            amount: item.amount,
-            unit: item.unit,
-          })),
-      )
+      console.log("[v0] Creating Instacart shopping list with", uncheckedItems.length, "items")
 
-      const response = await fetch("/api/instacart/create-order", {
+      const response = await fetch("/api/instacart/create-list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: uncheckedItems,
-          storeId: selectedStore?.id,
-          deliverySlotId: slot.id,
         }),
       })
 
       if (!response.ok) {
-        throw new Error("Failed to create order")
+        const errorData = await response.json().catch(() => ({}))
+        console.error("[v0] Failed to create shopping list:", errorData)
+        throw new Error(errorData.error || "Failed to create shopping list")
       }
 
       const data = await response.json()
+      console.log("[v0] Shopping list created successfully:", data)
 
-      toast({
-        title: "Order Created!",
-        description: `Your order from ${selectedStore?.name} will be delivered ${new Date(slot.start_time).toLocaleDateString()}`,
-      })
+      if (data.url) {
+        toast({
+          title: "Shopping List Created!",
+          description: "Opening Instacart to complete your order...",
+        })
 
-      if (data.order?.checkout_url) {
-        window.open(data.order.checkout_url, "_blank")
+        window.open(data.url, "_blank")
+      } else {
+        throw new Error("No URL returned from Instacart")
       }
     } catch (error) {
-      console.error("Instacart order error:", error)
+      console.error("[v0] Instacart order error:", error)
       toast({
         title: "Error",
-        description: "Failed to create order. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create shopping list. Please try again.",
         variant: "destructive",
       })
     } finally {
@@ -433,21 +416,6 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
           })}
         </CardContent>
       </Card>
-
-      <StoreSelectorDialog
-        open={showStoreSelector}
-        onClose={() => setShowStoreSelector(false)}
-        onSelectStore={handleStoreSelected}
-      />
-
-      {selectedStore && (
-        <DeliverySchedulerDialog
-          open={showDeliveryScheduler}
-          onClose={() => setShowDeliveryScheduler(false)}
-          store={selectedStore}
-          onSelectSlot={handleSlotSelected}
-        />
-      )}
     </>
   )
 }
