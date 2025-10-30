@@ -13,7 +13,8 @@ export function isMobileDevice(): boolean {
 
 /**
  * Opens a URL in a mobile-friendly way that allows apps to intercept
- * On mobile: Uses window.location.href to allow app deep linking
+ * On mobile: Uses window.location.href to allow the OS to intercept
+ * and open the native app if installed (universal links/app links)
  * On desktop: Opens in a new tab
  */
 export function openMobileFriendlyURL(url: string) {
@@ -49,4 +50,30 @@ export function openDeepLinkWithFallback(deepLink: string, webUrl: string, timeo
       window.location.href = webUrl
     }
   }, timeout)
+}
+
+/**
+ * Opens an Instacart URL with proper mobile deep linking support
+ * Converts development URLs to production URLs for Universal Links to work
+ * Falls back to custom URL scheme if needed
+ */
+export function openInstacartURL(url: string) {
+  let finalUrl = url
+
+  // Convert dev URLs to production URLs
+  if (url.includes(".dev.instacart.tools")) {
+    finalUrl = url.replace(".dev.instacart.tools", ".instacart.com")
+    console.log("[v0] Converted dev URL to production URL for deep linking:", finalUrl)
+  }
+
+  if (!isMobileDevice()) {
+    // On desktop, open in a new tab
+    window.open(finalUrl, "_blank")
+    return
+  }
+
+  // On mobile, try to open with Universal Links/App Links
+  // iOS and Android will automatically intercept and open the native app
+  console.log("[v0] Opening Instacart URL on mobile:", finalUrl)
+  window.location.href = finalUrl
 }

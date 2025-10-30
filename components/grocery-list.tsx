@@ -26,7 +26,7 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Progress } from "@/components/ui/progress"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { openMobileFriendlyURL } from "@/lib/mobile-utils"
+import { openInstacartURL } from "@/lib/mobile-utils"
 import { useToast } from "@/hooks/use-toast"
 import { Store, ExternalLink } from "@/components/icons"
 import { calculateIngredientCost } from "@/lib/ingredient-utils" // Import calculateIngredientCost
@@ -229,9 +229,7 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
           description: isMobile ? "Opening in Instacart app..." : "Opening Instacart in a new tab...",
         })
 
-        // This will open the Instacart mobile app if installed (via universal links),
-        // or fall back to the web version
-        openMobileFriendlyURL(data.url)
+        openInstacartURL(data.url)
       } else {
         throw new Error("No URL returned from Instacart")
       }
