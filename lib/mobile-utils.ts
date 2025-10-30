@@ -85,7 +85,7 @@ class InstacartDeepLinker {
     androidPackage: "com.instacart.client",
     urlScheme: "instacart://",
     universalLinkDomain: "www.instacart.com",
-    timeout: 2500,
+    timeout: 0, // Disabled timeout fallback
   }
 
   detectPlatform(): PlatformInfo {
@@ -131,15 +131,41 @@ class InstacartDeepLinker {
     }
   }
 
+  extractShoppingListId(url: string): string | null {
+    try {
+      // Match patterns like /store/shopping_lists/123 or /shopping_lists/123
+      const match = url.match(/shopping_lists\/(\d+)/i)
+      return match ? match[1] : null
+    } catch {
+      return null
+    }
+  }
+
   buildUniversalLink(url: string): string {
-    // The Instacart API returns URLs that work for both web and mobile
-    // Converting to customers.instacart.com causes DNS errors since that domain doesn't exist
+    const listId = this.extractShoppingListId(url)
+
+    if (listId) {
+      // Build a proper Instacart deep link URL
+      console.log("[v0] Extracted shopping list ID:", listId)
+      // Try the format that Instacart app recognizes
+      return `https://www.instacart.com/store/shopping_lists/${listId}`
+    }
+
+    // Fallback to original URL
     console.log("[v0] Using Instacart URL as-is:", url)
     return url
   }
 
   buildURLScheme(url: string): string {
-    // Extract path from URL and build custom scheme
+    const listId = this.extractShoppingListId(url)
+
+    if (listId) {
+      // Try Instacart's custom URL scheme format
+      console.log("[v0] Building URL scheme for list ID:", listId)
+      return `${this.config.urlScheme}store/shopping_lists/${listId}`
+    }
+
+    // Fallback: Extract path from URL
     try {
       const urlObj = new URL(url)
       const path = urlObj.pathname + urlObj.search
@@ -181,31 +207,10 @@ class InstacartDeepLinker {
 
     console.log("[v0] iOS deep linking - Universal Link:", universalLink)
 
-    // Track if user left the page (app opened)
-    let appOpened = false
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
-        appOpened = true
-        console.log("[v0] User left page - app likely opened")
-      }
-    }
-
-    document.addEventListener("visibilitychange", handleVisibilityChange)
-
-    // Method 1: Try Universal Link first (works best in Safari)
+    // Method 1: Try Universal Link (works best in Safari)
     if (platform.isSafari) {
       console.log("[v0] Safari detected - using Universal Link directly")
       window.location.href = universalLink
-
-      // Fallback to App Store if app didn't open
-      setTimeout(() => {
-        document.removeEventListener("visibilitychange", handleVisibilityChange)
-        if (!appOpened && !document.hidden) {
-          console.log("[v0] App didn't open - redirecting to App Store")
-          this.openAppStore("ios")
-        }
-      }, this.config.timeout)
-
       return
     }
 
@@ -219,40 +224,32 @@ class InstacartDeepLinker {
     iframe.src = urlScheme
     document.body.appendChild(iframe)
 
-    // Cleanup and fallback
     setTimeout(() => {
-      document.body.removeChild(iframe)
-      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      console.log("[v0] Trying Universal Link as fallback")
+      window.location.href = universalLink
 
-      // If user is still on page, app didn't open
-      if (!appOpened && document.hasFocus()) {
-        console.log("[v0] URL scheme failed - trying Universal Link")
-        window.location.href = universalLink
-
-        // Final fallback to App Store
-        setTimeout(() => {
-          if (!document.hidden) {
-            console.log("[v0] Universal Link failed - redirecting to App Store")
-            this.openAppStore("ios")
-          }
-        }, this.config.timeout)
-      }
+      // Cleanup iframe
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe)
+        }
+      }, 1000)
     }, 1500)
   }
 
   async openOnAndroid(url: string): Promise<void> {
     const universalLink = this.buildUniversalLink(url)
-    const intentUrl = this.buildAndroidIntent(universalLink)
 
-    console.log("[v0] Android deep linking - Intent URL:", intentUrl)
+    console.log("[v0] Android - trying direct navigation to:", universalLink)
+    window.location.href = universalLink
 
-    try {
-      window.location.href = intentUrl
-    } catch (e) {
-      console.error("[v0] Intent URL failed:", e)
-      // Fallback to Play Store
-      this.openAppStore("android")
-    }
+    setTimeout(() => {
+      if (!document.hidden) {
+        const intentUrl = this.buildAndroidIntent(universalLink)
+        console.log("[v0] Trying Android Intent URL:", intentUrl)
+        window.location.href = intentUrl
+      }
+    }, 2000)
   }
 
   openWeb(url: string): void {
