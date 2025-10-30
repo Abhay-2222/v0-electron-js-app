@@ -12,6 +12,7 @@ import type { WeeklyMealPlans } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { APIConnectionTest } from "@/components/settings/api-connection-test"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { InstacartOAuthButton } from "@/components/instacart-oauth-button"
 
 interface SettingsProps {
   highContrast: boolean
@@ -137,6 +138,14 @@ export function Settings({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-xs text-muted-foreground">Instacart Account</Label>
+            <InstacartOAuthButton />
+            <p className="text-xs text-muted-foreground">
+              Connect your Instacart account for seamless grocery ordering
+            </p>
+          </div>
+
           <div className="space-y-1.5">
             <Label htmlFor="fullName" className="text-xs text-muted-foreground">
               Full Name

@@ -19,15 +19,43 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [agreedToTerms, setAgreedToTerms] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // TODO: Implement actual authentication
-    onComplete()
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const endpoint = isSignUp ? "/api/auth/signup" : "/api/auth/signin"
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Authentication failed")
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token)
+      }
+
+      onComplete()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const handleSocialLogin = (provider: string) => {
-    // TODO: Implement social login
     console.log(`Login with ${provider}`)
     onComplete()
   }
@@ -50,6 +78,12 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
+          {error && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email" className="text-sm text-foreground">
@@ -62,6 +96,7 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              disabled={isLoading}
               className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground"
             />
           </div>
@@ -79,6 +114,7 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                disabled={isLoading}
                 className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground pr-12"
               />
               <button
@@ -107,6 +143,7 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
                 checked={agreedToTerms}
                 onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
                 className="mt-1"
+                disabled={isLoading}
               />
               <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
                 I've read and agreed to{" "}
@@ -125,9 +162,9 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
           <Button
             type="submit"
             className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-base shadow-lg shadow-primary/25"
-            disabled={isSignUp && !agreedToTerms}
+            disabled={(isSignUp && !agreedToTerms) || isLoading}
           >
-            {isSignUp ? "Create Account" : "Sign in"}
+            {isLoading ? "Please wait..." : isSignUp ? "Create Account" : "Sign in"}
           </Button>
         </form>
 

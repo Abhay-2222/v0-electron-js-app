@@ -102,16 +102,16 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
         )}
       </div>
 
-      {/* Main content - scrollable */}
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        <div className="flex flex-col items-center justify-center px-6 py-8 pb-32 max-w-2xl mx-auto w-full min-h-full">
+      {/* Main content - scrollable with proper spacing */}
+      <div className="flex-1 overflow-y-auto overflow-x-hidden pb-40">
+        <div className="flex flex-col items-center justify-start px-6 py-4 max-w-2xl mx-auto w-full">
           {/* Title */}
-          <h1 className="text-3xl md:text-4xl text-center text-foreground mb-8 leading-tight font-normal">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl text-center text-foreground mb-6 leading-tight font-normal">
             {currentSplash.title}
           </h1>
 
-          {/* Illustration */}
-          <div className="relative w-full max-w-[320px] md:max-w-[400px] aspect-square mb-8 flex items-center justify-center">
+          {/* Illustration - adjusted sizing for mobile */}
+          <div className="relative w-full max-w-[280px] sm:max-w-[320px] md:max-w-[400px] aspect-square mb-6 flex items-center justify-center">
             <Image
               src={currentSplash.image || "/placeholder.svg"}
               alt={currentSplash.title}
@@ -122,7 +122,7 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
           </div>
 
           {/* Description */}
-          <p className="text-center text-muted-foreground text-base md:text-lg max-w-md leading-relaxed font-normal">
+          <p className="text-center text-muted-foreground text-sm sm:text-base md:text-lg max-w-md leading-relaxed font-normal px-2">
             {currentSplash.description}
           </p>
         </div>
