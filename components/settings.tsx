@@ -6,11 +6,12 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { User, Palette, Database, Info, Mail, BarChart3, History } from "lucide-react"
+import { User, Palette, Database, Info, Mail, BarChart3, History, Globe } from "lucide-react"
 import { useState, useMemo } from "react"
 import type { WeeklyMealPlans } from "@/lib/types"
 import { useToast } from "@/hooks/use-toast"
 import { APIConnectionTest } from "@/components/settings/api-connection-test"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface SettingsProps {
   highContrast: boolean
@@ -28,12 +29,29 @@ export function Settings({
   onViewHistory,
 }: SettingsProps) {
   const [notifications, setNotifications] = useState(true)
+  const [region, setRegion] = useState<"US" | "CA">("US")
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
   const [savedProfile, setSavedProfile] = useState({ fullName: "", email: "", phone: "", bio: "" })
   const { toast } = useToast()
+
+  useState(() => {
+    const savedRegion = localStorage.getItem("instacart_country")
+    if (savedRegion === "US" || savedRegion === "CA") {
+      setRegion(savedRegion)
+    }
+  })
+
+  const handleRegionChange = (value: "US" | "CA") => {
+    setRegion(value)
+    localStorage.setItem("instacart_country", value)
+    toast({
+      title: "Region updated",
+      description: `Instacart stores will now show ${value === "US" ? "United States" : "Canadian"} locations.`,
+    })
+  }
 
   const handleSaveProfile = () => {
     setSavedProfile({ fullName, email, phone, bio })
@@ -203,6 +221,25 @@ export function Settings({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-2 py-3 px-4 rounded-xl border border-border/40">
+            <div className="flex items-center gap-2 mb-2">
+              <Globe className="h-4 w-4 text-primary" aria-hidden="true" />
+              <Label htmlFor="region" className="text-sm">
+                Region
+              </Label>
+            </div>
+            <Select value={region} onValueChange={handleRegionChange}>
+              <SelectTrigger id="region" className="h-9">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="US">United States</SelectItem>
+                <SelectItem value="CA">Canada</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground mt-1">Instacart stores will be shown for this region</p>
+          </div>
+
           <div className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/40">
             <div className="space-y-0.5">
               <Label htmlFor="high-contrast" className="text-sm cursor-pointer">

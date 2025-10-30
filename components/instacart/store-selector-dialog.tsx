@@ -1,13 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { MapPin, Store, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import type { InstacartStore } from "@/lib/types"
+import { detectUserCountry } from "@/lib/location-utils"
 
 interface StoreSelectorDialogProps {
   open: boolean
@@ -16,17 +18,33 @@ interface StoreSelectorDialogProps {
 }
 
 export function StoreSelectorDialog({ open, onClose, onSelectStore }: StoreSelectorDialogProps) {
+  const [country, setCountry] = useState<"US" | "CA">("US")
   const [zipCode, setZipCode] = useState("")
   const [stores, setStores] = useState<InstacartStore[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedStore, setSelectedStore] = useState<InstacartStore | null>(null)
   const { toast } = useToast()
 
+  useEffect(() => {
+    detectUserCountry().then((detectedCountry) => {
+      setCountry(detectedCountry)
+      console.log("[v0] Auto-detected country:", detectedCountry)
+    })
+  }, [])
+
+  const handleCountryChange = (value: "US" | "CA") => {
+    setCountry(value)
+    localStorage.setItem("instacart_country", value)
+    setStores([]) // Clear stores when country changes
+    setSelectedStore(null)
+  }
+
   const handleSearch = async () => {
-    if (!zipCode || zipCode.length < 5) {
+    const isValidZip = country === "US" ? zipCode.length === 5 : zipCode.length >= 6
+    if (!zipCode || !isValidZip) {
       toast({
-        title: "Invalid ZIP code",
-        description: "Please enter a valid 5-digit ZIP code",
+        title: "Invalid postal code",
+        description: country === "US" ? "Please enter a valid 5-digit ZIP code" : "Please enter a valid postal code",
         variant: "destructive",
       })
       return
@@ -34,9 +52,9 @@ export function StoreSelectorDialog({ open, onClose, onSelectStore }: StoreSelec
 
     setLoading(true)
     try {
-      console.log("[v0] Fetching Instacart stores for ZIP:", zipCode)
+      console.log("[v0] Fetching Instacart stores for:", { zipCode, country })
 
-      const response = await fetch(`/api/instacart/stores?postal_code=${zipCode}&country_code=US`, {
+      const response = await fetch(`/api/instacart/stores?postal_code=${zipCode}&country_code=${country}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       })
@@ -88,14 +106,27 @@ export function StoreSelectorDialog({ open, onClose, onSelectStore }: StoreSelec
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="zipCode">ZIP Code</Label>
+            <Label htmlFor="country">Country</Label>
+            <Select value={country} onValueChange={handleCountryChange}>
+              <SelectTrigger id="country">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="US">United States</SelectItem>
+                <SelectItem value="CA">Canada</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="zipCode">{country === "US" ? "ZIP Code" : "Postal Code"}</Label>
             <div className="flex gap-2">
               <Input
                 id="zipCode"
-                placeholder="Enter ZIP code"
+                placeholder={country === "US" ? "Enter ZIP code" : "Enter postal code"}
                 value={zipCode}
-                onChange={(e) => setZipCode(e.target.value)}
-                maxLength={5}
+                onChange={(e) => setZipCode(e.target.value.toUpperCase())}
+                maxLength={country === "US" ? 5 : 7}
                 className="flex-1"
               />
               <Button onClick={handleSearch} disabled={loading}>

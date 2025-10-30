@@ -29,8 +29,12 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Using Instacart environment:", environment)
     console.log("[v0] Base URL:", baseUrl)
 
+    const savedCountry = typeof localStorage !== "undefined" ? localStorage.getItem("instacart_country") : null
+    const countryCode = savedCountry === "CA" ? "CA" : "US"
+    const testPostalCode = countryCode === "CA" ? "M5H2N2" : "10001"
+
     const response = await fetchWithTimeout(
-      `${baseUrl}/idp/v1/retailers?postal_code=10001&country_code=US`,
+      `${baseUrl}/idp/v1/retailers?postal_code=${testPostalCode}&country_code=${countryCode}`,
       {
         method: "GET",
         headers: {
@@ -63,10 +67,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Instacart API connection successful (${environment} environment)`,
+      message: `Instacart API connection successful (${environment} environment, ${countryCode})`,
       retailersFound: data.retailers?.length || 0,
       apiKeyConfigured: true,
       environment,
+      country: countryCode,
     })
   } catch (error) {
     console.error("[v0] Instacart API test error:", error)
