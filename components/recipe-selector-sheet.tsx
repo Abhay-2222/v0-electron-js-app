@@ -27,7 +27,6 @@ import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { RecipeDetailSheet } from "@/components/recipe-detail-sheet"
-import { sampleRecipes } from "@/lib/sample-recipes"
 
 interface RecipeSelectorSheetProps {
   recipes: Recipe[]
@@ -76,9 +75,7 @@ export function RecipeSelectorSheet({
     weeklyBudget,
   )
 
-  const allLocalRecipes = [...recipes, ...sampleRecipes]
-
-  const baseRecipes = showSuggestions ? suggestedRecipes : allLocalRecipes
+  const baseRecipes = showSuggestions ? suggestedRecipes : recipes
 
   const filteredRecipes = baseRecipes.filter((recipe) => {
     const matchesSearch = !searchQuery.trim() || recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -91,7 +88,7 @@ export function RecipeSelectorSheet({
     ? {
         total: suggestedRecipes.length,
         filtered: filteredRecipes.length,
-        excluded: allLocalRecipes.length - suggestedRecipes.length,
+        excluded: recipes.length - suggestedRecipes.length,
       }
     : null
 
@@ -101,6 +98,18 @@ export function RecipeSelectorSheet({
   console.log("[v0] Filtered recipes count:", filteredRecipes.length)
   console.log("[v0] Base recipes count:", baseRecipes.length)
   console.log("[v0] Search query:", searchQuery)
+  const recipesWithFewIngredients = filteredRecipes.filter((r) => r.ingredients.length <= 4)
+  if (recipesWithFewIngredients.length > 0) {
+    console.log("[v0] WARNING: Found", recipesWithFewIngredients.length, "recipes with 4 or fewer ingredients")
+    console.log(
+      "[v0] Sample recipes with few ingredients:",
+      recipesWithFewIngredients.slice(0, 5).map((r) => ({
+        name: r.name,
+        ingredientCount: r.ingredients.length,
+        ingredients: r.ingredients.map((i) => i.name),
+      })),
+    )
+  }
   if (suggestionStats) {
     console.log("[v0] Smart suggestions active:", suggestionStats)
   }
