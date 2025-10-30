@@ -54,8 +54,8 @@ export function openDeepLinkWithFallback(deepLink: string, webUrl: string, timeo
 
 /**
  * Opens an Instacart URL with proper mobile deep linking support
- * Uses a programmatic link click to trigger Universal Links/App Links
- * This is the most reliable method for iOS and Android app detection
+ * For mobile: Uses direct navigation (window.location.href) to trigger Universal Links/App Links
+ * For desktop: Opens in a new tab
  */
 export function openInstacartURL(url: string): Promise<{ opened: boolean; method: string }> {
   return new Promise((resolve) => {
@@ -74,26 +74,9 @@ export function openInstacartURL(url: string): Promise<{ opened: boolean; method
 
     console.log("[v0] Opening Instacart URL on mobile:", finalUrl)
 
-    // This is the most reliable method for iOS Universal Links and Android App Links
-    const link = document.createElement("a")
-    link.href = finalUrl
-    link.target = "_blank"
-    link.rel = "noopener noreferrer"
+    // Universal Links ONLY work when navigating in the same window, not with target="_blank"
+    window.location.href = finalUrl
 
-    // Make the link invisible but accessible
-    link.style.position = "fixed"
-    link.style.top = "-1000px"
-    link.style.left = "-1000px"
-
-    document.body.appendChild(link)
-
-    // Programmatically click the link to trigger Universal Links
-    link.click()
-
-    // Clean up after a short delay
-    setTimeout(() => {
-      document.body.removeChild(link)
-      resolve({ opened: true, method: "universal-link" })
-    }, 100)
+    resolve({ opened: true, method: "universal-link" })
   })
 }
