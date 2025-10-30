@@ -92,16 +92,11 @@ export function MealSlotSelectorDialog({
                     These items will be added to your grocery list:
                   </p>
                   <div className="flex flex-wrap gap-1.5">
-                    {missingIngredients.slice(0, 5).map((ing, idx) => (
+                    {missingIngredients.map((ing, idx) => (
                       <Badge key={idx} variant="secondary" className="text-xs">
                         {ing.name} ({ing.amount} {ing.unit})
                       </Badge>
                     ))}
-                    {missingIngredients.length > 5 && (
-                      <Badge variant="secondary" className="text-xs">
-                        +{missingIngredients.length - 5} more
-                      </Badge>
-                    )}
                   </div>
                 </div>
               </div>

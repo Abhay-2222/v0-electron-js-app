@@ -126,7 +126,7 @@ export async function GET(request: Request) {
       return {
         id: `mealdb-${meal.idMeal}`,
         name: meal.strMeal,
-        category: mapMealCategory(meal.strCategory),
+        category: mapMealCategory(meal.strCategory, type),
         diet: "classic" as const,
         prepTime: 15,
         cookTime: 30,
@@ -382,10 +382,24 @@ function categorizeIngredient(ingredient: string): "produce" | "meat" | "dairy" 
   return "other"
 }
 
-function mapMealCategory(category: string): "breakfast" | "lunch" | "dinner" | "snack" {
+function mapMealCategory(category: string, mealType?: string): "breakfast" | "lunch" | "dinner" | "snack" {
   const lower = category?.toLowerCase() || ""
+
+  // If a specific meal type is requested, use it
+  if (mealType) {
+    const mealLower = mealType.toLowerCase()
+    if (mealLower === "breakfast") return "breakfast"
+    if (mealLower === "lunch") return "lunch"
+    if (mealLower === "dinner") return "dinner"
+    if (mealLower === "snack") return "snack"
+  }
+
+  // Otherwise, try to infer from category
   if (lower.includes("breakfast")) return "breakfast"
   if (lower.includes("dessert") || lower.includes("starter")) return "snack"
+  if (lower.includes("side")) return "snack"
+
+  // Default to dinner for main courses
   return "dinner"
 }
 
@@ -458,7 +472,7 @@ async function fetchDiverseRecipes(mealType?: string): Promise<any[]> {
     return {
       id: `mealdb-${meal.idMeal}`,
       name: meal.strMeal,
-      category: mapMealCategory(meal.strCategory),
+      category: mapMealCategory(meal.strCategory, mealType),
       diet: "classic" as const,
       prepTime: 15,
       cookTime: 30,
