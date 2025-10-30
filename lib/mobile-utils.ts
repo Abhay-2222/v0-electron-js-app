@@ -54,26 +54,46 @@ export function openDeepLinkWithFallback(deepLink: string, webUrl: string, timeo
 
 /**
  * Opens an Instacart URL with proper mobile deep linking support
- * Converts development URLs to production URLs for Universal Links to work
- * Falls back to custom URL scheme if needed
+ * Uses a programmatic link click to trigger Universal Links/App Links
+ * This is the most reliable method for iOS and Android app detection
  */
-export function openInstacartURL(url: string) {
-  let finalUrl = url
+export function openInstacartURL(url: string): Promise<{ opened: boolean; method: string }> {
+  return new Promise((resolve) => {
+    let finalUrl = url
+    if (url.includes(".dev.instacart.tools")) {
+      finalUrl = url.replace(".dev.instacart.tools", ".instacart.com")
+      console.log("[v0] Converted dev URL to production URL:", finalUrl)
+    }
 
-  // Convert dev URLs to production URLs
-  if (url.includes(".dev.instacart.tools")) {
-    finalUrl = url.replace(".dev.instacart.tools", ".instacart.com")
-    console.log("[v0] Converted dev URL to production URL for deep linking:", finalUrl)
-  }
+    if (!isMobileDevice()) {
+      // On desktop, open in a new tab
+      window.open(finalUrl, "_blank")
+      resolve({ opened: true, method: "desktop" })
+      return
+    }
 
-  if (!isMobileDevice()) {
-    // On desktop, open in a new tab
-    window.open(finalUrl, "_blank")
-    return
-  }
+    console.log("[v0] Opening Instacart URL on mobile:", finalUrl)
 
-  // On mobile, try to open with Universal Links/App Links
-  // iOS and Android will automatically intercept and open the native app
-  console.log("[v0] Opening Instacart URL on mobile:", finalUrl)
-  window.location.href = finalUrl
+    // This is the most reliable method for iOS Universal Links and Android App Links
+    const link = document.createElement("a")
+    link.href = finalUrl
+    link.target = "_blank"
+    link.rel = "noopener noreferrer"
+
+    // Make the link invisible but accessible
+    link.style.position = "fixed"
+    link.style.top = "-1000px"
+    link.style.left = "-1000px"
+
+    document.body.appendChild(link)
+
+    // Programmatically click the link to trigger Universal Links
+    link.click()
+
+    // Clean up after a short delay
+    setTimeout(() => {
+      document.body.removeChild(link)
+      resolve({ opened: true, method: "universal-link" })
+    }, 100)
+  })
 }
