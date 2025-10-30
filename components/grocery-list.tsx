@@ -204,11 +204,15 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     try {
       console.log("[v0] Creating Instacart shopping list with", uncheckedItems.length, "items")
 
+      const savedCountry = localStorage.getItem("instacart_country") || "US"
+      console.log("[v0] Using country:", savedCountry)
+
       const response = await fetch("/api/instacart/create-list", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           items: uncheckedItems,
+          country: savedCountry,
         }),
       })
 

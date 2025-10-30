@@ -14,13 +14,14 @@ interface CreateListRequest {
     unit: string
   }>
   title?: string
+  country?: string // Add country parameter
 }
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    const { items, title } = validateRequestBody<CreateListRequest>(body, ["items"])
+    const { items, title, country = "US" } = validateRequestBody<CreateListRequest>(body, ["items"]) // Extract country with default
 
     if (!Array.isArray(items) || items.length === 0) {
       throw new APIError("Items must be a non-empty array", 400)
@@ -37,14 +38,24 @@ export async function POST(request: NextRequest) {
 
     const listTitle = title || `Meal Plan Shopping List - ${new Date().toLocaleDateString()}`
 
-    console.log("[v0] Creating Instacart shopping list:", listTitle, "with", lineItems.length, "items")
+    console.log(
+      "[v0] Creating Instacart shopping list:",
+      listTitle,
+      "with",
+      lineItems.length,
+      "items",
+      "for country:",
+      country,
+    ) // Log country
 
     const environment = getEnvVar("INSTACART_ENVIRONMENT", false) || "development"
     const baseUrl =
       environment === "production" ? "https://connect.instacart.com" : "https://connect.dev.instacart.tools"
 
+    const apiUrl = `${baseUrl}/idp/v1/products/products_link?country_code=${country}`
+
     const response = await fetchWithTimeout(
-      `${baseUrl}/idp/v1/products/products_link`,
+      apiUrl,
       {
         method: "POST",
         headers: {

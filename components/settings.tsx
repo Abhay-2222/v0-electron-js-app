@@ -29,20 +29,16 @@ export function Settings({
   onViewHistory,
 }: SettingsProps) {
   const [notifications, setNotifications] = useState(true)
-  const [region, setRegion] = useState<"US" | "CA">("US")
+  const [region, setRegion] = useState<"US" | "CA">(() => {
+    const savedRegion = localStorage.getItem("instacart_country")
+    return savedRegion === "CA" ? "CA" : "US"
+  })
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
   const [savedProfile, setSavedProfile] = useState({ fullName: "", email: "", phone: "", bio: "" })
   const { toast } = useToast()
-
-  useState(() => {
-    const savedRegion = localStorage.getItem("instacart_country")
-    if (savedRegion === "US" || savedRegion === "CA") {
-      setRegion(savedRegion)
-    }
-  })
 
   const handleRegionChange = (value: "US" | "CA") => {
     setRegion(value)
