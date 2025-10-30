@@ -28,8 +28,11 @@ export async function POST(request: NextRequest) {
 
     const apiKey = getEnvVar("INSTACART_API_KEY")
 
-    const lineItems = items.map((item) => ({
+    // Format items for Instacart API
+    const lineItems: LineItem[] = items.map((item) => ({
       name: item.name,
+      quantity: item.amount,
+      unit: item.unit,
     }))
 
     const listTitle = title || `Meal Plan Shopping List - ${new Date().toLocaleDateString()}`
@@ -68,15 +71,8 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
     console.log("[v0] Instacart shopping list created successfully")
 
-    const shoppingListUrl = data.url || data.shopping_list_url || data.products_link_url || data.products_link
-
-    if (!shoppingListUrl) {
-      console.error("[v0] No URL found in response:", data)
-      throw new APIError("No shopping list URL returned from Instacart", 500)
-    }
-
     return NextResponse.json({
-      url: shoppingListUrl,
+      url: data.url || data.shopping_list_url || data.products_link_url,
       success: true,
     })
   } catch (error) {

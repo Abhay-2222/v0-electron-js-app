@@ -85,6 +85,7 @@ class InstacartDeepLinker {
     androidPackage: "com.instacart.client",
     urlScheme: "instacart://",
     universalLinkDomain: "www.instacart.com",
+    timeout: 0, // Disabled timeout fallback
   }
 
   detectPlatform(): PlatformInfo {
@@ -130,37 +131,99 @@ class InstacartDeepLinker {
     }
   }
 
-  buildDeepLink(url: string): string {
+  buildUniversalLink(url: string): string {
+    // The Instacart API returns URLs that work for both web and mobile
+    // Converting to customers.instacart.com causes DNS errors since that domain doesn't exist
+    console.log("[v0] Using Instacart URL as-is:", url)
+    return url
+  }
+
+  buildURLScheme(url: string): string {
+    // Extract path from URL and build custom scheme
     try {
       const urlObj = new URL(url)
-      // Extract the path and query from the web URL
-      // Convert https://www.instacart.com/store/shopping_lists/123
-      // to instacart://store/shopping_lists/123
       const path = urlObj.pathname + urlObj.search
-      return `instacart:/${path}` // Note: single slash after scheme
+      return `${this.config.urlScheme}${path.replace(/^\//, "")}`
     } catch {
-      return `instacart://store`
+      return `${this.config.urlScheme}checkout`
+    }
+  }
+
+  buildAndroidIntent(universalLink: string): string {
+    const { androidPackage } = this.config
+    const playStoreUrl = `https://play.google.com/store/apps/details?id=${androidPackage}`
+
+    // Remove https:// from universal link
+    const intentPath = universalLink.replace(/^https?:\/\//, "")
+
+    return (
+      `intent://${intentPath}#Intent;` +
+      `scheme=https;` +
+      `package=${androidPackage};` +
+      `S.browser_fallback_url=${encodeURIComponent(playStoreUrl)};` +
+      `end`
+    )
+  }
+
+  openAppStore(platform: "ios" | "android") {
+    if (platform === "ios") {
+      const appStoreUrl = `https://apps.apple.com/us/app/instacart/id${this.config.iosAppStoreId}`
+      window.location.href = appStoreUrl
+    } else if (platform === "android") {
+      const playStoreUrl = `https://play.google.com/store/apps/details?id=${this.config.androidPackage}`
+      window.location.href = playStoreUrl
     }
   }
 
   async openOnIOS(url: string): Promise<void> {
-    const deepLink = this.buildDeepLink(url)
+    const platform = this.detectPlatform()
+    const universalLink = this.buildUniversalLink(url)
 
-    console.log("[v0] iOS - Attempting to open Instacart app")
-    console.log("[v0] Deep link:", deepLink)
+    console.log("[v0] iOS deep linking - Universal Link:", universalLink)
 
-    // Try deep link
-    window.location.href = deepLink
+    // Method 1: Try Universal Link (works best in Safari)
+    if (platform.isSafari) {
+      console.log("[v0] Safari detected - using Universal Link directly")
+      window.location.href = universalLink
+      return
+    }
+
+    // Method 2: Try custom URL scheme with iframe (for other browsers)
+    console.log("[v0] Non-Safari browser - trying URL scheme with iframe")
+    const urlScheme = this.buildURLScheme(url)
+    console.log("[v0] URL Scheme:", urlScheme)
+
+    const iframe = document.createElement("iframe")
+    iframe.style.display = "none"
+    iframe.src = urlScheme
+    document.body.appendChild(iframe)
+
+    setTimeout(() => {
+      console.log("[v0] Trying Universal Link as fallback")
+      window.location.href = universalLink
+
+      // Cleanup iframe
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe)
+        }
+      }, 1000)
+    }, 1500)
   }
 
   async openOnAndroid(url: string): Promise<void> {
-    const deepLink = this.buildDeepLink(url)
+    const universalLink = this.buildUniversalLink(url)
 
-    console.log("[v0] Android - Attempting to open Instacart app")
-    console.log("[v0] Deep link:", deepLink)
+    console.log("[v0] Android - trying direct navigation to:", universalLink)
+    window.location.href = universalLink
 
-    // Try deep link first
-    window.location.href = deepLink
+    setTimeout(() => {
+      if (!document.hidden) {
+        const intentUrl = this.buildAndroidIntent(universalLink)
+        console.log("[v0] Trying Android Intent URL:", intentUrl)
+        window.location.href = intentUrl
+      }
+    }, 2000)
   }
 
   openWeb(url: string): void {
@@ -211,12 +274,4 @@ const deepLinker = new InstacartDeepLinker()
  */
 export function openInstacartURL(url: string): void {
   deepLinker.openInstacart(url)
-}
-
-// Helper function to build universal link
-function buildUniversalLink(url: string): string {
-  // The Instacart API returns URLs that work for both web and mobile
-  // Converting to customers.instacart.com causes DNS errors since that domain doesn't exist
-  console.log("[v0] Using Instacart URL as-is:", url)
-  return url
 }
