@@ -219,15 +219,9 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
       }
 
       const data = await response.json()
-      console.log("[v0] Shopping list created successfully:", {
-        url: data.url,
-        mobileDeepLink: data.mobileDeepLink,
-        cartId: data.cartId,
-      })
+      console.log("[v0] Shopping list created successfully:", data)
 
-      const deepLinkUrl = data.mobileDeepLink || data.url
-
-      if (deepLinkUrl) {
+      if (data.url) {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)
 
         toast({
@@ -235,8 +229,7 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
           description: isMobile ? "Opening in Instacart app..." : "Opening Instacart in a new tab...",
         })
 
-        console.log("[v0] Opening Instacart with URL:", deepLinkUrl)
-        openInstacartURL(deepLinkUrl)
+        openInstacartURL(data.url)
       } else {
         throw new Error("No URL returned from Instacart")
       }

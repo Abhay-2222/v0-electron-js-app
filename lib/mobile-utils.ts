@@ -131,41 +131,15 @@ class InstacartDeepLinker {
     }
   }
 
-  extractShoppingListId(url: string): string | null {
-    try {
-      // Match patterns like /store/shopping_lists/123 or /shopping_lists/123
-      const match = url.match(/shopping_lists\/(\d+)/i)
-      return match ? match[1] : null
-    } catch {
-      return null
-    }
-  }
-
   buildUniversalLink(url: string): string {
-    const listId = this.extractShoppingListId(url)
-
-    if (listId) {
-      // Build a proper Instacart deep link URL
-      console.log("[v0] Extracted shopping list ID:", listId)
-      // Try the format that Instacart app recognizes
-      return `https://www.instacart.com/store/shopping_lists/${listId}`
-    }
-
-    // Fallback to original URL
+    // The Instacart API returns URLs that work for both web and mobile
+    // Converting to customers.instacart.com causes DNS errors since that domain doesn't exist
     console.log("[v0] Using Instacart URL as-is:", url)
     return url
   }
 
   buildURLScheme(url: string): string {
-    const listId = this.extractShoppingListId(url)
-
-    if (listId) {
-      // Try Instacart's custom URL scheme format
-      console.log("[v0] Building URL scheme for list ID:", listId)
-      return `${this.config.urlScheme}store/shopping_lists/${listId}`
-    }
-
-    // Fallback: Extract path from URL
+    // Extract path from URL and build custom scheme
     try {
       const urlObj = new URL(url)
       const path = urlObj.pathname + urlObj.search

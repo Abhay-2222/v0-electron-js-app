@@ -69,13 +69,10 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
-    console.log("[v0] Instacart API full response:", JSON.stringify(data, null, 2))
     console.log("[v0] Instacart shopping list created successfully")
 
     return NextResponse.json({
       url: data.url || data.shopping_list_url || data.products_link_url,
-      mobileDeepLink: data.mobile_deep_link || data.deep_link,
-      cartId: data.cart_id || data.id || data.shopping_list_id,
       success: true,
     })
   } catch (error) {
