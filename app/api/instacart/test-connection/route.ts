@@ -29,9 +29,11 @@ export async function GET(request: NextRequest) {
     console.log("[v0] Using Instacart environment:", environment)
     console.log("[v0] Base URL:", baseUrl)
 
-    const savedCountry = typeof localStorage !== "undefined" ? localStorage.getItem("instacart_country") : null
-    const countryCode = savedCountry === "CA" ? "CA" : "US"
+    const { searchParams } = new URL(request.url)
+    const countryCode = searchParams.get("country") === "CA" ? "CA" : "US"
     const testPostalCode = countryCode === "CA" ? "M5H2N2" : "10001"
+
+    console.log("[v0] Testing with country:", countryCode)
 
     const response = await fetchWithTimeout(
       `${baseUrl}/idp/v1/retailers?postal_code=${testPostalCode}&country_code=${countryCode}`,

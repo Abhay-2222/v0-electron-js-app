@@ -12,6 +12,7 @@ interface ConnectionStatus {
   retailersFound?: number
   apiKeyConfigured?: boolean
   environment?: string
+  country?: string
 }
 
 export function APIConnectionTest() {
@@ -25,7 +26,11 @@ export function APIConnectionTest() {
 
     try {
       console.log("[v0] Testing Instacart API connection from UI...")
-      const response = await fetch("/api/instacart/test-connection")
+
+      const savedRegion = localStorage.getItem("instacart_country") || "US"
+      console.log("[v0] Testing with region:", savedRegion)
+
+      const response = await fetch(`/api/instacart/test-connection?country=${savedRegion}`)
       const data = await response.json()
       console.log("[v0] Connection test result:", data)
       setStatus(data)
@@ -48,6 +53,19 @@ export function APIConnectionTest() {
       testConnection()
     }
   }, [hasAutoTested])
+
+  useEffect(() => {
+    const handleRegionChange = () => {
+      console.log("[v0] Region changed, automatically re-testing connection...")
+      testConnection()
+    }
+
+    window.addEventListener("instacart-region-changed", handleRegionChange)
+
+    return () => {
+      window.removeEventListener("instacart-region-changed", handleRegionChange)
+    }
+  }, [])
 
   return (
     <Card>
@@ -94,6 +112,11 @@ export function APIConnectionTest() {
             {status.success && status.environment && (
               <p className="text-sm text-muted-foreground">
                 Environment: <span className="font-medium">{status.environment}</span>
+              </p>
+            )}
+            {status.success && status.country && (
+              <p className="text-sm text-muted-foreground">
+                Region: <span className="font-medium">{status.country === "CA" ? "Canada" : "United States"}</span>
               </p>
             )}
             {status.success && status.retailersFound !== undefined && (

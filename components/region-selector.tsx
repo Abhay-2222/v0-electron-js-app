@@ -37,16 +37,23 @@ function CanadaFlag() {
       <rect width="24" height="18" fill="#fff" />
       <rect width="6" height="18" fill="#FF0000" />
       <rect x="18" width="6" height="18" fill="#FF0000" />
-      <path d="M12,4 L11,7 L9,6 L10,8 L8,9 L11,9 L10,11 L12,10 L14,11 L13,9 L16,9 L14,8 L15,6 L13,7 Z" fill="#FF0000" />
+      <path
+        d="M12,5 L11.5,7.5 L9.5,7 L10.5,8.5 L8.5,9.5 L10.5,9.5 L10,11.5 L12,10.5 L14,11.5 L13.5,9.5 L15.5,9.5 L13.5,8.5 L14.5,7 L12.5,7.5 Z"
+        fill="#FF0000"
+        stroke="#FF0000"
+        strokeWidth="0.3"
+      />
     </svg>
   )
 }
 
 export function RegionSelector() {
+  const [mounted, setMounted] = useState(false)
   const [region, setRegion] = useState<"US" | "CA">("US")
   const { toast } = useToast()
 
   useEffect(() => {
+    setMounted(true)
     const savedRegion = localStorage.getItem("instacart_country")
     if (savedRegion === "CA" || savedRegion === "US") {
       setRegion(savedRegion)
@@ -56,10 +63,21 @@ export function RegionSelector() {
   const handleRegionChange = (newRegion: "US" | "CA") => {
     setRegion(newRegion)
     localStorage.setItem("instacart_country", newRegion)
+
+    window.dispatchEvent(new CustomEvent("instacart-region-changed", { detail: { region: newRegion } }))
+
     toast({
       title: "Region updated",
       description: `Instacart stores will now show ${newRegion === "US" ? "United States" : "Canadian"} locations.`,
     })
+  }
+
+  if (!mounted) {
+    return (
+      <Button variant="ghost" size="icon" aria-label="Select region" className="rounded-2xl h-11 w-11" disabled>
+        <USFlag />
+      </Button>
+    )
   }
 
   return (
