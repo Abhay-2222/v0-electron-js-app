@@ -17,17 +17,17 @@ const splashScreens: SplashScreen[] = [
   {
     title: "Plan your meals with ease",
     description: "Pick your week's meals in minutes. Organize breakfast, lunch, and dinner for the entire week.",
-    image: "/splash-meal-planning.jpg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-PzwZ4d12p46OfCkjasWtHd6uIbUwUM.png",
   },
   {
     title: "Smart grocery shopping",
     description: "Get an organized shopping list automatically generated from your meal plan. Shop once per week.",
-    image: "/splash-grocery-shopping.jpg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-YbN3BnhH8FkoUmbe6O0huwtb8UV9t4.png",
   },
   {
     title: "Cook healthy, delicious meals",
     description: "Easily cook healthy meals in about 30 minutes. Track nutrition and manage your pantry inventory.",
-    image: "/splash-healthy-cooking.jpg",
+    image: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/image-2QrF8uQng79Z7koNTMEOuhVx9HQhNd.png",
   },
 ]
 
