@@ -29,7 +29,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { openInstacartURL } from "@/lib/mobile-utils"
 import { useToast } from "@/hooks/use-toast"
 import { Store, ExternalLink } from "@/components/icons"
-import { calculateIngredientCost } from "@/lib/ingredient-utils"
+import { calculateIngredientCost, normalizeIngredientName } from "@/lib/ingredient-utils"
 import { InstacartConfirmationDialog } from "@/components/instacart-confirmation-dialog"
 
 interface GroceryListProps {
@@ -78,10 +78,11 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     Object.values(mealPlan).forEach((dayMeals) => {
       Object.values(dayMeals).forEach((recipe) => {
         recipe.ingredients.forEach((ingredient) => {
-          const key = `${ingredient.name.toLowerCase()}-${ingredient.unit}`
+          const normalizedName = normalizeIngredientName(ingredient.name)
+          const key = `${normalizedName}-${ingredient.unit}`
 
           const pantryItem = pantryItems.find(
-            (p) => p.name.toLowerCase() === ingredient.name.toLowerCase() && p.unit === ingredient.unit,
+            (p) => normalizeIngredientName(p.name) === normalizedName && p.unit === ingredient.unit,
           )
 
           const neededAmount = pantryItem ? Math.max(0, ingredient.amount - pantryItem.amount) : ingredient.amount

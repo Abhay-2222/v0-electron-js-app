@@ -45,7 +45,7 @@ export function calculateIngredientCost(name: string, amount: number, unit: stri
   }
 
   // Normalize the ingredient name
-  const normalizedName = name.toLowerCase().trim()
+  const normalizedName = normalizeIngredientName(name)
 
   // Find matching base price
   let basePrice = basePrices.default
@@ -109,4 +109,35 @@ export function calculateIngredientCost(name: string, amount: number, unit: stri
 
   // Round to 2 decimal places and ensure minimum of $0.10
   return Math.max(0.1, Math.round(estimatedCost * 100) / 100)
+}
+
+/**
+ * Normalize ingredient names to handle singular/plural variations
+ * This ensures "Tomato" and "Tomatoes" are treated as the same ingredient
+ */
+export function normalizeIngredientName(name: string): string {
+  const normalized = name.toLowerCase().trim()
+
+  // Common plural patterns to singularize
+  const pluralRules = [
+    { pattern: /atoes$/, replacement: "ato" }, // tomatoes -> tomato, potatoes -> potato
+    { pattern: /ies$/, replacement: "y" }, // berries -> berry, cherries -> cherry
+    { pattern: /ves$/, replacement: "f" }, // knives -> knife, leaves -> leaf
+    { pattern: /oes$/, replacement: "o" }, // mangoes -> mango, heroes -> hero
+    { pattern: /ses$/, replacement: "s" }, // glasses -> glass
+    { pattern: /ches$/, replacement: "ch" }, // peaches -> peach
+    { pattern: /shes$/, replacement: "sh" }, // radishes -> radish
+    { pattern: /xes$/, replacement: "x" }, // boxes -> box
+    { pattern: /zzes$/, replacement: "zz" }, // fizzes -> fizz
+    { pattern: /s$/, replacement: "" }, // apples -> apple, carrots -> carrot
+  ]
+
+  // Apply the first matching rule
+  for (const rule of pluralRules) {
+    if (rule.pattern.test(normalized)) {
+      return normalized.replace(rule.pattern, rule.replacement)
+    }
+  }
+
+  return normalized
 }

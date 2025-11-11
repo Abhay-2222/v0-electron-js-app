@@ -7,25 +7,33 @@ import { useToast } from "@/hooks/use-toast"
 
 function USFlag() {
   return (
-    <svg viewBox="0 0 24 18" className="w-6 h-5 rounded-sm">
-      <rect width="24" height="18" fill="#B22234" />
-      <path d="M0,2h24M0,4h24M0,6h24M0,8h24M0,10h24M0,12h24M0,14h24M0,16h24" stroke="#fff" strokeWidth="2" />
-      <rect width="10" height="8" fill="#3C3B6E" />
+    <svg viewBox="0 0 30 20" className="w-7 h-5 rounded-sm border border-gray-200">
+      {/* Red stripes */}
+      <rect width="30" height="20" fill="#B22234" />
+      {/* White stripes */}
+      <rect y="2" width="30" height="2" fill="#fff" />
+      <rect y="6" width="30" height="2" fill="#fff" />
+      <rect y="10" width="30" height="2" fill="#fff" />
+      <rect y="14" width="30" height="2" fill="#fff" />
+      <rect y="18" width="30" height="2" fill="#fff" />
+      {/* Blue canton */}
+      <rect width="12" height="10" fill="#3C3B6E" />
+      {/* Larger white stars in simplified pattern */}
       <g fill="#fff">
-        <circle cx="2" cy="1.5" r="0.4" />
-        <circle cx="4" cy="1.5" r="0.4" />
-        <circle cx="6" cy="1.5" r="0.4" />
-        <circle cx="8" cy="1.5" r="0.4" />
-        <circle cx="3" cy="3" r="0.4" />
-        <circle cx="5" cy="3" r="0.4" />
-        <circle cx="7" cy="3" r="0.4" />
-        <circle cx="2" cy="4.5" r="0.4" />
-        <circle cx="4" cy="4.5" r="0.4" />
-        <circle cx="6" cy="4.5" r="0.4" />
-        <circle cx="8" cy="4.5" r="0.4" />
-        <circle cx="3" cy="6" r="0.4" />
-        <circle cx="5" cy="6" r="0.4" />
-        <circle cx="7" cy="6" r="0.4" />
+        <circle cx="2" cy="2" r="0.8" />
+        <circle cx="5" cy="2" r="0.8" />
+        <circle cx="8" cy="2" r="0.8" />
+        <circle cx="11" cy="2" r="0.8" />
+        <circle cx="3.5" cy="4" r="0.8" />
+        <circle cx="6.5" cy="4" r="0.8" />
+        <circle cx="9.5" cy="4" r="0.8" />
+        <circle cx="2" cy="6" r="0.8" />
+        <circle cx="5" cy="6" r="0.8" />
+        <circle cx="8" cy="6" r="0.8" />
+        <circle cx="11" cy="6" r="0.8" />
+        <circle cx="3.5" cy="8" r="0.8" />
+        <circle cx="6.5" cy="8" r="0.8" />
+        <circle cx="9.5" cy="8" r="0.8" />
       </g>
     </svg>
   )
@@ -33,15 +41,16 @@ function USFlag() {
 
 function CanadaFlag() {
   return (
-    <svg viewBox="0 0 24 18" className="w-6 h-5 rounded-sm">
-      <rect width="24" height="18" fill="#fff" />
-      <rect width="6" height="18" fill="#FF0000" />
-      <rect x="18" width="6" height="18" fill="#FF0000" />
+    <svg viewBox="0 0 30 20" className="w-7 h-5 rounded-sm border border-gray-200">
+      <rect width="30" height="20" fill="#fff" />
+      <rect width="7" height="20" fill="#FF0000" />
+      <rect x="23" width="7" height="20" fill="#FF0000" />
+      {/* Simplified larger maple leaf */}
       <path
-        d="M12,5 L11.5,7.5 L9.5,7 L10.5,8.5 L8.5,9.5 L10.5,9.5 L10,11.5 L12,10.5 L14,11.5 L13.5,9.5 L15.5,9.5 L13.5,8.5 L14.5,7 L12.5,7.5 Z"
+        d="M15,5 L14.5,8 L12,7.5 L13.5,9.5 L11,10.5 L13.5,10.5 L13,13 L15,11.5 L17,13 L16.5,10.5 L19,10.5 L16.5,9.5 L18,7.5 L15.5,8 Z"
         fill="#FF0000"
         stroke="#FF0000"
-        strokeWidth="0.3"
+        strokeWidth="0.5"
       />
     </svg>
   )

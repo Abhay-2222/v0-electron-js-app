@@ -1,5 +1,5 @@
 import type { Recipe, MealPlan, WeeklyMealPlans, PantryItem } from "./types"
-import { calculateIngredientCost } from "./ingredient-prices"
+import { calculateIngredientCost, normalizeIngredientName } from "./ingredient-utils"
 
 export function getRecentlyEatenRecipes(allMealPlans: WeeklyMealPlans, daysBack = 3): Set<string> {
   const recentRecipeIds = new Set<string>()
@@ -124,14 +124,13 @@ export function calculateGroceryListCost(mealPlan: MealPlan, pantryItems: Pantry
   Object.values(mealPlan).forEach((dayMeals) => {
     Object.values(dayMeals).forEach((recipe) => {
       recipe.ingredients.forEach((ingredient) => {
-        const key = `${ingredient.name.toLowerCase()}-${ingredient.unit}`
+        const normalizedName = normalizeIngredientName(ingredient.name)
+        const key = `${normalizedName}-${ingredient.unit}`
 
-        // Check if we have this ingredient in pantry
         const pantryItem = pantryItems.find(
-          (p) => p.name.toLowerCase() === ingredient.name.toLowerCase() && p.unit === ingredient.unit,
+          (p) => normalizeIngredientName(p.name) === normalizedName && p.unit === ingredient.unit,
         )
 
-        // Calculate needed amount after pantry deduction
         const neededAmount = pantryItem ? Math.max(0, ingredient.amount - pantryItem.amount) : ingredient.amount
 
         if (neededAmount > 0) {
@@ -150,7 +149,6 @@ export function calculateGroceryListCost(mealPlan: MealPlan, pantryItems: Pantry
     })
   })
 
-  // Calculate total cost of needed ingredients
   let total = 0
   ingredientMap.forEach((ingredient) => {
     total += calculateIngredientCost(ingredient.name, ingredient.amount, ingredient.unit)
