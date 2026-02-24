@@ -6,13 +6,9 @@ import { Switch } from "@/components/ui/switch"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { User, Palette, Database, Info, Mail, BarChart3, History, Globe } from "lucide-react"
+import { User, Palette, Database, Info, Mail, BarChart3, History } from "lucide-react"
 import { useState, useMemo } from "react"
 import type { WeeklyMealPlans } from "@/lib/types"
-import { useToast } from "@/hooks/use-toast"
-import { APIConnectionTest } from "@/components/settings/api-connection-test"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { InstacartOAuthButton } from "@/components/instacart-oauth-button"
 
 interface SettingsProps {
   highContrast: boolean
@@ -30,39 +26,10 @@ export function Settings({
   onViewHistory,
 }: SettingsProps) {
   const [notifications, setNotifications] = useState(true)
-  const [region, setRegion] = useState<"US" | "CA">(() => {
-    const savedRegion = localStorage.getItem("instacart_country")
-    return savedRegion === "CA" ? "CA" : "US"
-  })
   const [email, setEmail] = useState("")
   const [fullName, setFullName] = useState("")
   const [phone, setPhone] = useState("")
   const [bio, setBio] = useState("")
-  const [savedProfile, setSavedProfile] = useState({ fullName: "", email: "", phone: "", bio: "" })
-  const { toast } = useToast()
-
-  const handleRegionChange = (value: "US" | "CA") => {
-    setRegion(value)
-    localStorage.setItem("instacart_country", value)
-    toast({
-      title: "Region updated",
-      description: `Instacart stores will now show ${value === "US" ? "United States" : "Canadian"} locations.`,
-    })
-  }
-
-  const handleSaveProfile = () => {
-    setSavedProfile({ fullName, email, phone, bio })
-    toast({
-      title: "Profile saved",
-      description: "Your profile changes have been saved successfully.",
-    })
-  }
-
-  const hasUnsavedChanges =
-    fullName !== savedProfile.fullName ||
-    email !== savedProfile.email ||
-    phone !== savedProfile.phone ||
-    bio !== savedProfile.bio
 
   const analytics = useMemo(() => {
     const weeks = Object.keys(allMealPlans).sort().reverse().slice(0, 4)
@@ -121,9 +88,6 @@ export function Settings({
 
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
-      {/* API Connection Test */}
-      <APIConnectionTest />
-
       {/* Profile Section */}
       <Card className="shadow-sm border-border/40">
         <CardHeader className="pb-3">
@@ -138,14 +102,6 @@ export function Settings({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Instacart Account</Label>
-            <InstacartOAuthButton />
-            <p className="text-xs text-muted-foreground">
-              Connect your Instacart account for seamless grocery ordering
-            </p>
-          </div>
-
           <div className="space-y-1.5">
             <Label htmlFor="fullName" className="text-xs text-muted-foreground">
               Full Name
@@ -206,9 +162,7 @@ export function Settings({
             />
           </div>
 
-          <Button className="w-full h-9 text-sm" onClick={handleSaveProfile} disabled={!hasUnsavedChanges}>
-            Save Profile Changes
-          </Button>
+          <Button className="w-full h-9 text-sm">Save Profile Changes</Button>
         </CardContent>
       </Card>
 
@@ -226,25 +180,6 @@ export function Settings({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2 py-3 px-4 rounded-xl border border-border/40">
-            <div className="flex items-center gap-2 mb-2">
-              <Globe className="h-4 w-4 text-primary" aria-hidden="true" />
-              <Label htmlFor="region" className="text-sm">
-                Region
-              </Label>
-            </div>
-            <Select value={region} onValueChange={handleRegionChange}>
-              <SelectTrigger id="region" className="h-9">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="US">United States</SelectItem>
-                <SelectItem value="CA">Canada</SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground mt-1">Instacart stores will be shown for this region</p>
-          </div>
-
           <div className="flex items-center justify-between py-3 px-4 rounded-xl hover:bg-muted/50 transition-all border border-transparent hover:border-border/40">
             <div className="space-y-0.5">
               <Label htmlFor="high-contrast" className="text-sm cursor-pointer">

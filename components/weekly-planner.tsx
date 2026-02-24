@@ -23,7 +23,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
-  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import { DailyNutrition } from "./daily-nutrition"
 import { BudgetTracker } from "./budget-tracker"
@@ -116,26 +115,26 @@ export function WeeklyPlanner({
   const hasMeals = Object.keys(mealPlan).length > 0
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div>
+    <div className="space-y-5">
+      <div className="mb-5">
         <BudgetTracker actualSpending={actualSpending} weeklyBudget={weeklyBudget} onBudgetChange={onBudgetChange} />
       </div>
 
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center justify-between gap-2">
         <Button
           variant="ghost"
           size="icon"
           onClick={goToPreviousWeek}
           aria-label="Go to previous week"
-          className="h-10 w-10 flex-shrink-0 rounded-xl hover:bg-muted/60 hover-scale hover:rotate-[-5deg] transition-all duration-300"
+          className="h-9 w-9 flex-shrink-0"
         >
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </Button>
 
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <p
-            className={`text-sm font-medium whitespace-nowrap transition-all ${
-              isCurrentWeek ? "text-primary bg-primary/10 px-4 py-2 rounded-full" : "text-foreground"
+            className={`text-xs whitespace-nowrap transition-all ${
+              isCurrentWeek ? "text-primary bg-primary/10 px-3 py-1.5 rounded-full" : "text-foreground"
             }`}
             aria-live="polite"
           >
@@ -143,14 +142,14 @@ export function WeeklyPlanner({
           </p>
         </div>
 
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex gap-1 flex-shrink-0">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => setViewMode(viewMode === "single" ? "grid" : "single")}
             aria-label={viewMode === "single" ? "Switch to grid view" : "Switch to single day view"}
             title={viewMode === "single" ? "Grid view" : "Single day view"}
-            className="h-10 w-10 rounded-xl hover:bg-muted/60 hover-scale hover:rotate-[5deg] transition-all duration-300"
+            className="h-9 w-9"
           >
             {viewMode === "single" ? (
               <Grid3x3 className="h-4 w-4" aria-hidden="true" />
@@ -164,34 +163,32 @@ export function WeeklyPlanner({
                 variant="ghost"
                 size="icon"
                 aria-label="Meal plan options"
-                className="h-10 w-10 rounded-xl hover:bg-muted/60 hover-scale hover:rotate-[5deg] transition-all duration-300"
+                className="h-9 w-9 hover:bg-accent hover:text-accent-foreground transition-colors"
               >
                 <MoreVertical className="h-4 w-4" aria-hidden="true" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Options</DropdownMenuLabel>
-              <DropdownMenuSeparator />
+            <DropdownMenuContent align="end">
               {!isCurrentWeek && (
                 <>
-                  <DropdownMenuItem onClick={goToCurrentWeek} className="cursor-pointer">
-                    <Calendar className="h-4 w-4 mr-3" aria-hidden="true" />
+                  <DropdownMenuItem onClick={goToCurrentWeek}>
+                    <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                     Go to Current Week
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
-              <DropdownMenuItem onClick={handleCopyLastWeek} disabled={!lastWeekMealPlan} className="cursor-pointer">
-                <Calendar className="h-4 w-4 mr-3" aria-hidden="true" />
+              <DropdownMenuItem onClick={handleCopyLastWeek} disabled={!lastWeekMealPlan}>
+                <Calendar className="h-4 w-4 mr-2" aria-hidden="true" />
                 Copy Last Week
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => setShowClearConfirm(true)}
                 disabled={!hasMeals}
-                className="text-destructive cursor-pointer"
+                className="text-destructive"
               >
-                <Trash2 className="h-4 w-4 mr-3" aria-hidden="true" />
+                <Trash2 className="h-4 w-4 mr-2" aria-hidden="true" />
                 Clear All Meals
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -203,7 +200,7 @@ export function WeeklyPlanner({
           size="icon"
           onClick={goToNextWeek}
           aria-label="Go to next week"
-          className="h-10 w-10 flex-shrink-0 rounded-xl hover:bg-muted/60 hover-scale hover:rotate-[5deg] transition-all duration-300"
+          className="h-9 w-9 flex-shrink-0"
         >
           <ChevronRight className="h-5 w-5" aria-hidden="true" />
         </Button>
@@ -211,7 +208,7 @@ export function WeeklyPlanner({
 
       {viewMode === "single" ? (
         <>
-          <div className="flex gap-2 justify-between px-1" role="tablist" aria-label="Days of the week">
+          <div className="flex gap-2 justify-between px-2" role="tablist" aria-label="Days of the week">
             {daysOfWeek.map((date, index) => {
               const dayKey = getDayKey(date)
               const dayMeals = mealPlan[dayKey] || {}
@@ -226,17 +223,15 @@ export function WeeklyPlanner({
                   role="tab"
                   aria-selected={isActive}
                   aria-label={`${formatDayWithDate(date)}${isToday ? " (today)" : ""}${mealCount > 0 ? `, ${mealCount} meal${mealCount > 1 ? "s" : ""} planned` : ""}`}
-                  className={`flex flex-col items-center justify-center gap-1.5 px-2 py-3 rounded-2xl transition-all w-[48px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 hover-scale animate-scale-in animate-stagger-${index + 1} ${
-                    isActive
-                      ? "bg-primary text-primary-foreground shadow-lg shadow-primary/30"
-                      : "bg-muted/50 hover:bg-muted"
-                  } ${isToday && !isActive ? "ring-2 ring-primary/40" : ""}`}
+                  className={`flex flex-col items-center justify-center gap-1 px-1.5 py-2.5 rounded-xl transition-all w-[46px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                    isActive ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/60 hover:bg-muted"
+                  } ${isToday && !isActive ? "ring-2 ring-primary/30" : ""}`}
                 >
-                  <span className="text-[10px] leading-none opacity-90 font-medium">{getAbbreviatedDay(date)}</span>
-                  <span className="text-base leading-none font-semibold">{getDayNumber(date)}</span>
+                  <span className="text-[10px] leading-none opacity-80">{getAbbreviatedDay(date)}</span>
+                  <span className="text-sm leading-none">{getDayNumber(date)}</span>
                   {mealCount > 0 && (
                     <div
-                      className={`h-1.5 w-1.5 rounded-full animate-pulse-ring ${isActive ? "bg-primary-foreground" : "bg-primary"}`}
+                      className={`h-1 w-1 rounded-full ${isActive ? "bg-primary-foreground" : "bg-primary"}`}
                       aria-hidden="true"
                     />
                   )}
@@ -245,24 +240,23 @@ export function WeeklyPlanner({
             })}
           </div>
 
-          <div
-            className="space-y-4 animate-slide-up-delayed"
-            role="region"
-            aria-label={`Meals for ${formatDayWithDate(currentDate)}`}
-          >
+          <div className="space-y-4" role="region" aria-label={`Meals for ${formatDayWithDate(currentDate)}`}>
             {MEAL_TYPES.map((mealType, index) => {
               const meal = mealPlan[currentDay]?.[mealType]
 
               return (
-                <Card key={mealType} className="card-elevated overflow-hidden border-border/40 hover-lift">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-5">
-                      <h4 className="text-lg capitalize tracking-tight font-semibold">{mealType}</h4>
+                <Card
+                  key={mealType}
+                  className="shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border-border/40"
+                >
+                  <CardContent className="p-5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-lg capitalize tracking-tight">{mealType}</h4>
                       {meal && (
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-9 w-9 flex-shrink-0 rounded-xl hover:bg-destructive/10 hover:text-destructive transition-all hover-scale"
+                          className="h-8 w-8 flex-shrink-0 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
                           onClick={() => handleRemoveMeal(currentDay, mealType)}
                           aria-label={`Remove ${meal.name} from ${mealType}`}
                         >
@@ -272,25 +266,25 @@ export function WeeklyPlanner({
                     </div>
 
                     {meal ? (
-                      <div className="flex gap-4 overflow-hidden">
-                        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-2xl shadow-md ring-1 ring-border/20">
+                      <div className="flex gap-3 overflow-hidden">
+                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-border/30">
                           <Image
-                            src={meal.image || "/placeholder.svg?height=80&width=80"}
+                            src={meal.image || "/placeholder.svg?height=64&width=64"}
                             alt={`${meal.name} - ${mealType} meal`}
                             fill
                             className="object-cover"
                           />
                         </div>
                         <div className="flex-1 min-w-0 overflow-hidden">
-                          <p className="font-medium text-base text-balance line-clamp-2 break-words mb-3">
+                          <p className="font-normal text-base text-balance line-clamp-2 break-words mb-2">
                             {meal.name}
                           </p>
-                          <div className="flex items-center gap-5 text-sm text-muted-foreground flex-wrap">
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                               <Clock className="h-4 w-4" aria-hidden="true" />
                               <span>{meal.prepTime + meal.cookTime}m</span>
                             </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                               <Users className="h-4 w-4" aria-hidden="true" />
                               <span>{meal.servings}</span>
                             </div>
@@ -300,12 +294,12 @@ export function WeeklyPlanner({
                     ) : (
                       <Button
                         variant="outline"
-                        className="w-full h-20 border-2 border-dashed bg-transparent rounded-2xl hover:bg-muted/50 hover:border-primary/50 transition-all hover-lift"
+                        className="w-full h-16 border-2 border-dashed bg-transparent rounded-xl hover:bg-muted/50 hover:border-primary/50 transition-all"
                         onClick={() => onAddMeal(currentDay, mealType)}
                         aria-label={`Add ${mealType} for ${formatDayWithDate(currentDate)}`}
                       >
                         <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-                        <span className="font-medium">Add {mealType}</span>
+                        <span className="font-normal">Add {mealType}</span>
                       </Button>
                     )}
                   </CardContent>
@@ -314,12 +308,12 @@ export function WeeklyPlanner({
             })}
           </div>
 
-          <div>
+          <div className="mt-5">
             <DailyNutrition mealPlan={mealPlan} currentDay={currentDay} />
           </div>
         </>
       ) : (
-        <div className="grid grid-cols-1 gap-4" role="region" aria-label="Week overview">
+        <div className="grid grid-cols-1 gap-3" role="region" aria-label="Week overview">
           {daysOfWeek.map((date, index) => {
             const dayKey = getDayKey(date)
             const dayMeals = mealPlan[dayKey] || {}
@@ -327,30 +321,30 @@ export function WeeklyPlanner({
             const isToday = date.toDateString() === new Date().toDateString()
 
             return (
-              <Card key={index} className={`card-elevated ${isToday ? "ring-2 ring-primary" : ""}`}>
-                <CardContent className="pt-5 pb-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-base font-semibold">
+              <Card key={index} className={isToday ? "ring-2 ring-primary" : ""}>
+                <CardContent className="pt-4 pb-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-sm">
                       {formatDayWithDate(date)}
                       {isToday && <span className="sr-only"> (today)</span>}
                     </h3>
                     {mealCount > 0 && (
                       <span
-                        className="text-xs text-muted-foreground font-medium"
+                        className="text-xs text-muted-foreground"
                         aria-label={`${mealCount} meal${mealCount > 1 ? "s" : ""} planned`}
                       >
                         {mealCount} meal{mealCount > 1 ? "s" : ""}
                       </span>
                     )}
                   </div>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     {MEAL_TYPES.map((mealType) => {
                       const meal = dayMeals[mealType]
                       return (
-                        <div key={mealType} className="space-y-2">
-                          <p className="text-xs text-muted-foreground capitalize font-medium">{mealType}</p>
+                        <div key={mealType} className="space-y-1">
+                          <p className="text-xs text-muted-foreground capitalize">{mealType}</p>
                           {meal ? (
-                            <div className="relative aspect-square rounded-xl overflow-hidden group">
+                            <div className="relative aspect-square rounded overflow-hidden group">
                               <Image
                                 src={meal.image || "/placeholder.svg?height=100&width=100"}
                                 alt={`${meal.name} - ${mealType} for ${formatDayWithDate(date)}`}
@@ -361,7 +355,7 @@ export function WeeklyPlanner({
                                 <Button
                                   variant="ghost"
                                   size="icon"
-                                  className="h-9 w-9 text-white hover:bg-white/20 rounded-xl"
+                                  className="h-8 w-8 text-white hover:bg-white/20"
                                   onClick={() => handleRemoveMeal(dayKey, mealType)}
                                   aria-label={`Remove ${meal.name} from ${mealType}`}
                                 >
@@ -372,7 +366,7 @@ export function WeeklyPlanner({
                           ) : (
                             <button
                               onClick={() => onAddMeal(dayKey, mealType)}
-                              className="aspect-square rounded-xl border-2 border-dashed flex items-center justify-center hover:bg-muted/50 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 hover-lift"
+                              className="aspect-square rounded border-2 border-dashed flex items-center justify-center hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
                               aria-label={`Add ${mealType} for ${formatDayWithDate(date)}`}
                             >
                               <Plus className="h-5 w-5 text-muted-foreground" aria-hidden="true" />
