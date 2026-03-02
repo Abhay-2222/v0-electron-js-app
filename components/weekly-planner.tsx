@@ -133,8 +133,8 @@ export function WeeklyPlanner({
 
         <div className="flex-1 min-w-0 flex items-center justify-center">
           <p
-            className={`text-xs whitespace-nowrap transition-all ${
-              isCurrentWeek ? "text-primary bg-primary/10 px-3 py-1.5 rounded-full" : "text-foreground"
+            className={`text-xs font-mono tracking-wider whitespace-nowrap transition-all ${
+              isCurrentWeek ? "text-[var(--sage-d)] bg-[var(--sage-l)] px-3 py-1.5 rounded-full" : "text-foreground"
             }`}
             aria-live="polite"
           >
@@ -208,7 +208,7 @@ export function WeeklyPlanner({
 
       {viewMode === "single" ? (
         <>
-          <div className="flex gap-2 justify-between px-2" role="tablist" aria-label="Days of the week">
+          <div className="flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Days of the week">
             {daysOfWeek.map((date, index) => {
               const dayKey = getDayKey(date)
               const dayMeals = mealPlan[dayKey] || {}
@@ -223,87 +223,82 @@ export function WeeklyPlanner({
                   role="tab"
                   aria-selected={isActive}
                   aria-label={`${formatDayWithDate(date)}${isToday ? " (today)" : ""}${mealCount > 0 ? `, ${mealCount} meal${mealCount > 1 ? "s" : ""} planned` : ""}`}
-                  className={`flex flex-col items-center justify-center gap-1 px-1.5 py-2.5 rounded-xl transition-all w-[46px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                    isActive ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/60 hover:bg-muted"
-                  } ${isToday && !isActive ? "ring-2 ring-primary/30" : ""}`}
+                  className={`flex flex-col items-center gap-1 min-w-[52px] py-2 px-1 rounded-xl transition-all border-[1.5px] ${
+                    isActive
+                      ? "bg-[var(--sage-l)] border-[var(--sage)] text-[var(--sage-d)]"
+                      : "bg-card border-[var(--cream-200)] hover:border-[var(--cream-400)] hover:bg-[var(--cream-50)]"
+                  }`}
                 >
-                  <span className="text-[10px] leading-none opacity-80">{getAbbreviatedDay(date)}</span>
-                  <span className="text-sm leading-none">{getDayNumber(date)}</span>
-                  {mealCount > 0 && (
-                    <div
-                      className={`h-1 w-1 rounded-full ${isActive ? "bg-primary-foreground" : "bg-primary"}`}
-                      aria-hidden="true"
-                    />
+                  <span className="font-mono text-[8px] tracking-wider uppercase text-[var(--stone-500)]">{getAbbreviatedDay(date)}</span>
+                  <span className="text-sm">{getDayNumber(date)}</span>
+                  {isToday && (
+                    <div className="w-1 h-1 rounded-full bg-[var(--sage)]" aria-hidden="true" />
                   )}
                 </button>
               )
             })}
           </div>
 
-          <div className="space-y-4" role="region" aria-label={`Meals for ${formatDayWithDate(currentDate)}`}>
-            {MEAL_TYPES.map((mealType, index) => {
+          <div className="space-y-3" role="region" aria-label={`Meals for ${formatDayWithDate(currentDate)}`}>
+            {MEAL_TYPES.map((mealType) => {
               const meal = mealPlan[currentDay]?.[mealType]
+              const isToday = daysOfWeek[currentDayIndex]?.toDateString() === new Date().toDateString()
 
               return (
-                <Card
+                <div
                   key={mealType}
-                  className="shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden border-border/40"
+                  className={`rounded-xl p-3 transition-all border-[1.5px] ${
+                    meal
+                      ? isToday
+                        ? "bg-[var(--sage-l)] border-[var(--sage)] shadow-warm-xs"
+                        : "bg-card border-[var(--cream-300)] shadow-warm-xs"
+                      : "bg-[var(--cream-50)] border-[var(--cream-200)] border-dashed"
+                  }`}
                 >
-                  <CardContent className="p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <h4 className="text-lg capitalize tracking-tight">{mealType}</h4>
-                      {meal && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 flex-shrink-0 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-colors"
-                          onClick={() => handleRemoveMeal(currentDay, mealType)}
-                          aria-label={`Remove ${meal.name} from ${mealType}`}
-                        >
-                          <X className="h-4 w-4" aria-hidden="true" />
-                        </Button>
-                      )}
-                    </div>
-
-                    {meal ? (
-                      <div className="flex gap-3 overflow-hidden">
-                        <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-xl shadow-sm ring-1 ring-border/30">
-                          <Image
-                            src={meal.image || "/placeholder.svg?height=64&width=64"}
-                            alt={`${meal.name} - ${mealType} meal`}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0 overflow-hidden">
-                          <p className="font-normal text-base text-balance line-clamp-2 break-words mb-2">
-                            {meal.name}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-muted-foreground flex-wrap">
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <Clock className="h-4 w-4" aria-hidden="true" />
-                              <span>{meal.prepTime + meal.cookTime}m</span>
-                            </div>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <Users className="h-4 w-4" aria-hidden="true" />
-                              <span>{meal.servings}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)]">{mealType}</span>
+                    {meal && (
                       <Button
-                        variant="outline"
-                        className="w-full h-16 border-2 border-dashed bg-transparent rounded-xl hover:bg-muted/50 hover:border-primary/50 transition-all"
-                        onClick={() => onAddMeal(currentDay, mealType)}
-                        aria-label={`Add ${mealType} for ${formatDayWithDate(currentDate)}`}
+                        variant="ghost"
+                        size="icon"
+                        className="h-7 w-7 flex-shrink-0 rounded-lg hover:bg-[var(--terra-l)] hover:text-[var(--terra-d)] transition-colors"
+                        onClick={() => handleRemoveMeal(currentDay, mealType)}
+                        aria-label={`Remove ${meal.name} from ${mealType}`}
                       >
-                        <Plus className="h-5 w-5 mr-2" aria-hidden="true" />
-                        <span className="font-normal">Add {mealType}</span>
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
                       </Button>
                     )}
-                  </CardContent>
-                </Card>
+                  </div>
+
+                  {meal ? (
+                    <div className="flex gap-3 overflow-hidden">
+                      <div className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg">
+                        <Image
+                          src={meal.image || "/placeholder.svg?height=56&width=56"}
+                          alt={`${meal.name} - ${mealType} meal`}
+                          fill
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 overflow-hidden">
+                        <p className="text-[13px] text-balance line-clamp-2 break-words text-foreground">
+                          {meal.name}
+                        </p>
+                        <p className="text-[11px] text-[var(--stone-600)] mt-1">
+                          ~{meal.prepTime + meal.cookTime} min · {meal.servings} servings
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      className="w-full py-2 text-[11px] text-[var(--stone-500)] italic hover:text-[var(--sage-d)] transition-colors"
+                      onClick={() => onAddMeal(currentDay, mealType)}
+                      aria-label={`Add ${mealType} for ${formatDayWithDate(currentDate)}`}
+                    >
+                      + Add meal
+                    </button>
+                  )}
+                </div>
               )
             })}
           </div>

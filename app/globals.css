@@ -3,177 +3,161 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* ═══════════════════════════════════════════
+   MEALPLAN DESIGN SYSTEM — Token Architecture
+   Philosophy: calm over urgency · awareness without obsession
+   Typography: weight 400 throughout · hierarchy via size + color only
+   Fonts: Lora (serif display) · DM Sans (body) · DM Mono (labels/data)
+═══════════════════════════════════════════ */
+
 :root {
-  /* Base colors - warm cream/beige backgrounds */
-  --background: oklch(0.98 0.01 85);
-  --foreground: oklch(0.2 0.01 85);
+  /* ── Warm Neutral Foundation ── */
+  --cream-50:   #fdfaf6;
+  --cream-100:  #f8f3ec;
+  --cream-200:  #f0e8db;
+  --cream-300:  #e4d6c4;
+  --cream-400:  #cfc0aa;
+  --stone-500:  #a89a87;
+  --stone-600:  #8a7c6b;
+  --stone-700:  #6b5e50;
+  --stone-800:  #4a3f34;
+  --stone-900:  #2c251e;
 
-  /* Card and surface colors - soft white with warmth */
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.2 0.01 85);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.2 0.01 85);
+  /* ── Food Accent Palette ── */
+  --sage:       #7a9e7e;
+  --sage-l:     #e8f2e9;
+  --sage-d:     #4d7552;
+  --terracotta: #c17f5a;
+  --terra-l:    #f5e8de;
+  --terra-d:    #934f2a;
+  --wheat:      #d4a84b;
+  --wheat-l:    #fdf3d6;
+  --wheat-d:    #9a6f1a;
+  --plum:       #8e6b8e;
+  --plum-l:     #f0e8f0;
+  --sky:        #6b9fba;
+  --sky-l:      #e3eef5;
 
-  /* Primary - Fresh sage green for healthy food aesthetic */
-  --primary: oklch(0.65 0.12 145);
-  --primary-foreground: oklch(1 0 0);
+  /* ── Semantic Tokens ── */
+  --background: var(--cream-50);
+  --foreground: var(--stone-900);
 
-  /* Secondary - Warm terracotta/coral accent */
-  --secondary: oklch(0.75 0.08 45);
-  --secondary-foreground: oklch(0.15 0.01 45);
+  --card: #ffffff;
+  --card-foreground: var(--stone-900);
+  --popover: #ffffff;
+  --popover-foreground: var(--stone-900);
 
-  /* Muted - Very light warm gray */
-  --muted: oklch(0.96 0.01 85);
-  --muted-foreground: oklch(0.5 0.01 85);
+  --primary: var(--sage-d);
+  --primary-foreground: #ffffff;
 
-  /* Accent - Soft peach for highlights */
-  --accent: oklch(0.92 0.04 55);
-  --accent-foreground: oklch(0.25 0.01 55);
+  --secondary: var(--cream-100);
+  --secondary-foreground: var(--stone-800);
 
-  /* Destructive - Muted red */
-  --destructive: oklch(0.55 0.18 25);
-  --destructive-foreground: oklch(1 0 0);
+  --muted: var(--cream-100);
+  --muted-foreground: var(--stone-600);
 
-  /* Info - Soft blue */
-  --info: oklch(0.6 0.12 240);
-  --info-foreground: oklch(1 0 0);
+  --accent: var(--sage-l);
+  --accent-foreground: var(--sage-d);
 
-  /* Success - Matches primary green */
-  --success: oklch(0.65 0.12 145);
-  --success-foreground: oklch(1 0 0);
+  --destructive: var(--terra-d);
+  --destructive-foreground: #ffffff;
 
-  /* Warning - Warm amber */
-  --warning: oklch(0.75 0.12 65);
-  --warning-foreground: oklch(0.15 0.01 65);
+  --info: var(--sky);
+  --info-foreground: #ffffff;
 
-  /* Border - Very subtle warm gray */
-  --border: oklch(0.92 0.01 85);
-  --input: oklch(0.98 0.01 85);
-  --ring: oklch(0.65 0.12 145);
+  --success: var(--sage);
+  --success-foreground: #ffffff;
 
-  /* Chart colors - harmonious palette */
-  --chart-1: oklch(0.65 0.12 145);
-  --chart-2: oklch(0.75 0.08 45);
-  --chart-3: oklch(0.6 0.12 240);
-  --chart-4: oklch(0.75 0.12 65);
-  --chart-5: oklch(0.7 0.1 300);
+  --warning: var(--wheat);
+  --warning-foreground: var(--stone-900);
 
-  /* Radius - more rounded for modern aesthetic */
-  --radius: 1rem;
+  --border: var(--cream-300);
+  --input: var(--cream-200);
+  --ring: var(--sage);
 
-  /* Sidebar colors */
-  --sidebar: oklch(0.99 0.01 85);
-  --sidebar-foreground: oklch(0.2 0.01 85);
-  --sidebar-primary: oklch(0.65 0.12 145);
-  --sidebar-primary-foreground: oklch(1 0 0);
-  --sidebar-accent: oklch(0.96 0.01 85);
-  --sidebar-accent-foreground: oklch(0.25 0.01 85);
-  --sidebar-border: oklch(0.92 0.01 85);
-  --sidebar-ring: oklch(0.65 0.12 145);
+  /* Chart colors */
+  --chart-1: var(--sage);
+  --chart-2: var(--terracotta);
+  --chart-3: var(--wheat);
+  --chart-4: var(--plum);
+  --chart-5: var(--sky);
+
+  --radius: 0.75rem;
+
+  /* Sidebar */
+  --sidebar: var(--stone-900);
+  --sidebar-foreground: var(--cream-100);
+  --sidebar-primary: var(--sage);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255,255,255,0.06);
+  --sidebar-accent-foreground: rgba(255,255,255,0.80);
+  --sidebar-border: rgba(255,255,255,0.06);
+  --sidebar-ring: var(--sage);
+
+  /* ── Shadows — warm brown base, never harsh ── */
+  --sh-xs: 0 1px 3px rgba(44,37,30,0.06);
+  --sh-sm: 0 2px 8px rgba(44,37,30,0.07), 0 1px 3px rgba(44,37,30,0.05);
+  --sh-md: 0 4px 16px rgba(44,37,30,0.08), 0 2px 6px rgba(44,37,30,0.05);
+  --sh-lg: 0 8px 28px rgba(44,37,30,0.10), 0 3px 8px rgba(44,37,30,0.06);
+  --sh-focus: 0 0 0 3px rgba(122,158,126,0.30);
+
+  /* ── Motion ── */
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 100ms;
+  --t-base: 160ms;
+  --t-slow: 240ms;
 }
 
 .dark {
-  /* Dark mode with warm, sophisticated tones */
-  --background: oklch(0.18 0.01 85);
-  --foreground: oklch(0.95 0.01 85);
-  --card: oklch(0.22 0.01 85);
-  --card-foreground: oklch(0.95 0.01 85);
-  --popover: oklch(0.22 0.01 85);
-  --popover-foreground: oklch(0.95 0.01 85);
-  --primary: oklch(0.7 0.12 145);
-  --primary-foreground: oklch(0.15 0.01 145);
-  --secondary: oklch(0.7 0.08 45);
-  --secondary-foreground: oklch(0.95 0.01 45);
-  --muted: oklch(0.28 0.01 85);
-  --muted-foreground: oklch(0.65 0.01 85);
-  --accent: oklch(0.35 0.04 55);
-  --accent-foreground: oklch(0.95 0.01 55);
-  --destructive: oklch(0.6 0.18 25);
-  --destructive-foreground: oklch(1 0 0);
-  --info: oklch(0.65 0.12 240);
-  --info-foreground: oklch(1 0 0);
-  --success: oklch(0.7 0.12 145);
-  --success-foreground: oklch(0.15 0.01 145);
-  --warning: oklch(0.75 0.12 65);
-  --warning-foreground: oklch(0.15 0.01 65);
-  --border: oklch(0.3 0.01 85);
-  --input: oklch(0.25 0.01 85);
-  --ring: oklch(0.7 0.12 145);
-  --chart-1: oklch(0.7 0.12 145);
-  --chart-2: oklch(0.7 0.08 45);
-  --chart-3: oklch(0.65 0.12 240);
-  --chart-4: oklch(0.75 0.12 65);
-  --chart-5: oklch(0.7 0.1 300);
-  --sidebar: oklch(0.22 0.01 85);
-  --sidebar-foreground: oklch(0.95 0.01 85);
-  --sidebar-primary: oklch(0.7 0.12 145);
-  --sidebar-primary-foreground: oklch(0.15 0.01 145);
-  --sidebar-accent: oklch(0.28 0.01 85);
-  --sidebar-accent-foreground: oklch(0.95 0.01 85);
-  --sidebar-border: oklch(0.3 0.01 85);
-  --sidebar-ring: oklch(0.7 0.12 145);
+  --background: #1a1714;
+  --foreground: var(--cream-100);
+  --card: #231f1b;
+  --card-foreground: var(--cream-100);
+  --popover: #231f1b;
+  --popover-foreground: var(--cream-100);
+  --primary: var(--sage);
+  --primary-foreground: var(--stone-900);
+  --secondary: #2e2822;
+  --secondary-foreground: var(--cream-200);
+  --muted: #2e2822;
+  --muted-foreground: var(--stone-500);
+  --accent: rgba(122,158,126,0.15);
+  --accent-foreground: var(--sage-l);
+  --destructive: #c17f5a;
+  --destructive-foreground: #ffffff;
+  --border: #3a332c;
+  --input: #2e2822;
+  --ring: var(--sage);
+  --sidebar: #1a1714;
+  --sidebar-foreground: var(--cream-100);
+  --sidebar-primary: var(--sage);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgba(255,255,255,0.06);
+  --sidebar-accent-foreground: rgba(255,255,255,0.80);
+  --sidebar-border: rgba(255,255,255,0.08);
+  --sidebar-ring: var(--sage);
 }
 
 .high-contrast {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0 0 0);
-  --primary: oklch(0.35 0.25 141);
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.85 0 0);
-  --secondary-foreground: oklch(0 0 0);
-  --muted: oklch(0.92 0 0);
-  --muted-foreground: oklch(0.15 0 0);
-  --accent: oklch(0.45 0.22 50);
-  --accent-foreground: oklch(1 0 0);
-  --destructive: oklch(0.4 0.28 25);
-  --destructive-foreground: oklch(1 0 0);
-  --info: oklch(0.4 0.2 250);
-  --info-foreground: oklch(1 0 0);
-  --success: oklch(0.35 0.25 141);
-  --success-foreground: oklch(1 0 0);
-  --warning: oklch(0.45 0.22 50);
-  --warning-foreground: oklch(1 0 0);
-  --border: oklch(0 0 0);
-  --input: oklch(0 0 0);
-  --ring: oklch(0.35 0.25 141);
-}
-
-.high-contrast.dark {
-  --background: oklch(0 0 0);
-  --foreground: oklch(1 0 0);
-  --card: oklch(0 0 0);
-  --card-foreground: oklch(1 0 0);
-  --popover: oklch(0 0 0);
-  --popover-foreground: oklch(1 0 0);
-  --primary: oklch(0.75 0.25 141);
-  --primary-foreground: oklch(0 0 0);
-  --secondary: oklch(0.15 0 0);
-  --secondary-foreground: oklch(1 0 0);
-  --muted: oklch(0.08 0 0);
-  --muted-foreground: oklch(0.85 0 0);
-  --accent: oklch(0.8 0.22 50);
-  --accent-foreground: oklch(0 0 0);
-  --destructive: oklch(0.65 0.28 25);
-  --destructive-foreground: oklch(0 0 0);
-  --info: oklch(0.7 0.2 250);
-  --info-foreground: oklch(0 0 0);
-  --success: oklch(0.75 0.25 141);
-  --success-foreground: oklch(0 0 0);
-  --warning: oklch(0.8 0.22 50);
-  --warning-foreground: oklch(0 0 0);
-  --border: oklch(1 0 0);
-  --input: oklch(1 0 0);
-  --ring: oklch(0.75 0.25 141);
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #ffffff;
+  --card-foreground: #000000;
+  --primary: #2d5a31;
+  --primary-foreground: #ffffff;
+  --secondary: #f0f0f0;
+  --secondary-foreground: #000000;
+  --muted: #e8e8e8;
+  --muted-foreground: #1a1a1a;
+  --border: #000000;
+  --input: #000000;
+  --ring: #2d5a31;
 }
 
 @theme inline {
-  /* Updated to SF Pro Display system font */
-  --font-sans: "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "Geist Mono", "Geist Mono Fallback";
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-mono: 'DM Mono', 'Courier New', monospace;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -226,70 +210,71 @@
   html {
     overflow-y: auto;
     height: 100%;
+    font-size: 14px;
+    scroll-behavior: smooth;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-weight: 400; /* weight 400 THROUGHOUT — no bold anywhere in product */
+    line-height: 1.65;
     overflow-y: auto;
     min-height: 100%;
+    -webkit-font-smoothing: antialiased;
   }
 
   *:focus-visible {
-    @apply outline-2 outline-offset-2 outline-ring;
+    box-shadow: var(--sh-focus);
+    outline: none;
   }
 
-  /* Removed all bold font weights, using normal weight throughout */
+  /* Typography — weight 400 throughout, hierarchy via size + color only */
   h1 {
-    font-size: 1.875rem;
+    font-family: var(--font-serif);
+    font-size: clamp(28px, 4vw, 36px);
     font-weight: 400;
-    line-height: 1.2;
-    letter-spacing: -0.025em;
-  }
-
-  @media (min-width: 768px) {
-    h1 {
-      font-size: 2.25rem;
-    }
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
   }
 
   h2 {
-    @apply text-xl tracking-tight leading-tight;
+    font-family: var(--font-serif);
+    font-size: 22px;
     font-weight: 400;
-  }
-
-  @media (min-width: 768px) {
-    h2 {
-      @apply text-2xl;
-    }
+    font-style: italic;
+    line-height: 1.2;
+    color: var(--foreground);
   }
 
   h3 {
-    @apply text-lg leading-tight;
+    font-family: var(--font-sans);
+    font-size: 17px;
     font-weight: 400;
-  }
-
-  @media (min-width: 768px) {
-    h3 {
-      @apply text-xl;
-    }
+    line-height: 1.3;
+    letter-spacing: -0.01em;
+    color: var(--foreground);
   }
 
   p {
-    @apply text-base leading-relaxed;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 1.65;
   }
 
   label,
   .label {
-    @apply text-sm leading-normal;
+    font-size: 12px;
     font-weight: 400;
+    line-height: 1.5;
+    color: var(--foreground);
   }
 
   button,
   a,
   [role="button"],
   [role="tab"] {
-    @apply transition-all duration-300 ease-out;
+    transition: all var(--t-base) var(--ease);
   }
 
   button,
@@ -297,6 +282,11 @@
   [role="tab"] {
     @apply min-h-[44px];
   }
+
+  /* Scrollbar — subtle, warm */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--cream-100); }
+  ::-webkit-scrollbar-thumb { background: var(--cream-300); border-radius: 9999px; }
 }
 
 @layer utilities {
@@ -308,113 +298,67 @@
     display: none;
   }
 
-  .spacing-xs {
-    @apply gap-2;
-  }
-  .spacing-sm {
-    @apply gap-3;
-  }
-  .spacing-md {
-    @apply gap-4;
-  }
-  .spacing-lg {
-    @apply gap-6;
-  }
-  .spacing-xl {
-    @apply gap-8;
+  /* Design system overline — DM Mono, uppercase, tracked */
+  .overline {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    font-weight: 400;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--stone-500);
   }
 
-  /* Enhanced card styling for modern aesthetic */
-  .card-elevated {
-    @apply shadow-sm hover:shadow-lg transition-all duration-300;
+  /* Nutrition number — always size 20, weight 400 */
+  .data-number {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    color: var(--foreground);
   }
+
+  /* Warm shadows */
+  .shadow-warm-xs { box-shadow: var(--sh-xs); }
+  .shadow-warm-sm { box-shadow: var(--sh-sm); }
+  .shadow-warm-md { box-shadow: var(--sh-md); }
+  .shadow-warm-lg { box-shadow: var(--sh-lg); }
 
   .animate-slide-up {
     animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   @keyframes slide-up {
-    from {
-      transform: translateY(24px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    from { transform: translateY(24px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
-  @keyframes gradient-shift {
-    0% {
-      background-position: 0% 50%;
-    }
-    50% {
-      background-position: 100% 50%;
-    }
-    100% {
-      background-position: 0% 50%;
-    }
-  }
-
-  /* Slowed down animation and ensured it's smooth */
-  .animate-gradient-shift {
-    animation: gradient-shift 10s ease-in-out infinite;
-  }
-
-  /* New utility classes for aesthetic design */
-  .glass-effect {
-    @apply backdrop-blur-xl bg-card/80 border border-border/50;
-  }
-
-  .soft-shadow {
-    box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.08), 0 4px 16px -4px rgba(0, 0, 0, 0.04);
-  }
-
-  .soft-shadow-lg {
-    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1), 0 8px 32px -8px rgba(0, 0, 0, 0.08);
-  }
-
-  /* Added animations for splash screen */
   @keyframes fade-in {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+    from { opacity: 0; }
+    to { opacity: 1; }
   }
 
   @keyframes scale-in {
-    from {
-      transform: scale(0.8);
-      opacity: 0;
-    }
-    to {
-      transform: scale(1);
-      opacity: 1;
-    }
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
   }
 
   @keyframes slide-up-delayed {
-    from {
-      transform: translateY(16px);
-      opacity: 0;
-    }
-    to {
-      transform: translateY(0);
-      opacity: 1;
-    }
+    from { transform: translateY(16px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
   }
 
-  .animate-fade-in {
-    animation: fade-in 1s ease-out;
-  }
+  .animate-fade-in { animation: fade-in 1s ease-out; }
+  .animate-scale-in { animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  .animate-slide-up-delayed { animation: slide-up-delayed 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
 
-  .animate-scale-in {
-    animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1);
-  }
-
-  .animate-slide-up-delayed {
-    animation: slide-up-delayed 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+  /* Philosophy note — callout block */
+  .philosophy-note {
+    background: var(--cream-100);
+    border-left: 3px solid var(--sage);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    font-size: 12.5px;
+    color: var(--stone-700);
+    line-height: 1.65;
+    font-style: italic;
   }
 }

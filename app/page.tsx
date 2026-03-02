@@ -14,7 +14,6 @@ import { AuthScreen } from "@/components/auth-screen"
 import { OnboardingSplash } from "@/components/onboarding-splash"
 import { WeekHistoryView } from "@/components/week-history"
 import {
-  UtensilsCrossed,
   Calendar,
   ShoppingCart,
   Contrast,
@@ -189,13 +188,11 @@ export default function MealPlannerPage() {
 
   return (
     <div className={`min-h-screen bg-background ${highContrast ? "high-contrast" : ""}`}>
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl">
+      <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-[var(--cream-200)]">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/90 text-primary-foreground shadow-lg shadow-primary/20">
-                <UtensilsCrossed className="h-6 w-6" aria-hidden="true" />
-              </div>
+            <div className="flex items-center gap-3">
+              <span className="font-serif text-lg italic text-foreground">MealPlan</span>
             </div>
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
@@ -283,99 +280,37 @@ export default function MealPlannerPage() {
       </main>
 
       <nav
-        className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80"
+        className="fixed bottom-0 left-0 right-0 z-30 bg-background/95 backdrop-blur-xl border-t border-[var(--cream-200)]"
         role="navigation"
         aria-label="Main navigation"
       >
         <div className="container mx-auto px-4 sm:px-6">
-          <div className="flex items-center justify-around py-2 gap-2">
-            <button
-              onClick={() => setActiveTab("planner")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
-                activeTab === "planner"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-              }`}
-              aria-label="Planner"
-              aria-current={activeTab === "planner" ? "page" : undefined}
-            >
-              <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  activeTab === "planner"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-transparent"
-                }`}
-              >
-                <Calendar className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[11px]">Planner</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("grocery")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
-                activeTab === "grocery"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-              }`}
-              aria-label="Grocery List"
-              aria-current={activeTab === "grocery" ? "page" : undefined}
-            >
-              <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  activeTab === "grocery"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-transparent"
-                }`}
-              >
-                <ShoppingCart className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[11px]">Grocery</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("pantry")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
-                activeTab === "pantry"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-              }`}
-              aria-label="Pantry Inventory"
-              aria-current={activeTab === "pantry" ? "page" : undefined}
-            >
-              <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  activeTab === "pantry"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-transparent"
-                }`}
-              >
-                <Package className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[11px]">Pantry</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("settings")}
-              className={`flex flex-col items-center justify-center gap-2 py-3 px-4 rounded-2xl transition-all duration-300 ${
-                activeTab === "settings"
-                  ? "bg-primary/10 text-primary scale-105"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/30"
-              }`}
-              aria-label="Settings"
-              aria-current={activeTab === "settings" ? "page" : undefined}
-            >
-              <div
-                className={`p-2 rounded-xl transition-all duration-300 ${
-                  activeTab === "settings"
-                    ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25"
-                    : "bg-transparent"
-                }`}
-              >
-                <SettingsIcon className="h-5 w-5" aria-hidden="true" />
-              </div>
-              <span className="text-[11px]">Settings</span>
-            </button>
+          <div className="flex items-center justify-around py-2">
+            {[
+              { key: "planner" as const, label: "Plan", icon: Calendar },
+              { key: "grocery" as const, label: "Shop", icon: ShoppingCart },
+              { key: "pantry" as const, label: "Pantry", icon: Package },
+              { key: "settings" as const, label: "Settings", icon: SettingsIcon },
+            ].map((tab) => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.key
+              return (
+                <button
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`flex flex-col items-center gap-1 py-2 px-4 rounded-xl transition-all min-w-[64px] ${
+                    isActive
+                      ? "bg-[var(--sage-l)] text-[var(--sage-d)]"
+                      : "text-[var(--stone-500)] hover:bg-[var(--cream-100)]"
+                  }`}
+                  aria-label={tab.label}
+                  aria-current={isActive ? "page" : undefined}
+                >
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                  <span className="font-mono text-[8px] tracking-wider uppercase">{tab.label}</span>
+                </button>
+              )
+            })}
           </div>
         </div>
       </nav>

@@ -119,15 +119,15 @@ export function RecipeSelectorSheet({
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "breakfast":
-        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
+        return "bg-[var(--wheat-l)] text-[var(--wheat-d)] border-[#e8c87a]"
       case "lunch":
-        return "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800"
+        return "bg-[var(--sky-l)] text-[var(--sky)] border-[#a8c8dc]"
       case "dinner":
-        return "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800"
+        return "bg-[var(--plum-l)] text-[var(--plum)] border-[#c8a8c8]"
       case "snack":
-        return "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800"
+        return "bg-[var(--sage-l)] text-[var(--sage-d)] border-[#b8d6ba]"
       default:
-        return "bg-muted text-muted-foreground border-border"
+        return "bg-[var(--cream-100)] text-[var(--stone-600)] border-[var(--cream-300)]"
     }
   }
 
@@ -136,7 +136,7 @@ export function RecipeSelectorSheet({
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl h-[85vh] p-0 flex flex-col overflow-hidden">
           <DialogHeader className="px-6 pt-4 pb-2 flex-shrink-0">
-            <DialogTitle className="text-lg">{currentMeal ? `Select ${currentMeal}` : "Select Recipe"}</DialogTitle>
+            <DialogTitle className="font-serif text-lg italic text-foreground">{currentMeal ? `Select ${currentMeal}` : "Select Recipe"}</DialogTitle>
           </DialogHeader>
 
           <div className="px-6 space-y-3 flex-shrink-0">
@@ -301,28 +301,19 @@ export function RecipeSelectorSheet({
 
                         {recipe.nutrition && (
                           <div>
-                            <p className="text-xs font-medium mb-2">Nutrition (per serving)</p>
-                            <div className="grid grid-cols-4 gap-2">
-                              <div className="flex flex-col items-center gap-1 p-2 bg-background rounded">
-                                <Flame className="h-4 w-4 text-orange-500" aria-hidden="true" />
-                                <span className="text-xs font-medium">{recipe.nutrition.calories}</span>
-                                <span className="text-xs text-muted-foreground">cal</span>
-                              </div>
-                              <div className="flex flex-col items-center gap-1 p-2 bg-background rounded">
-                                <Beef className="h-4 w-4 text-red-500" aria-hidden="true" />
-                                <span className="text-xs font-medium">{recipe.nutrition.protein}g</span>
-                                <span className="text-xs text-muted-foreground">protein</span>
-                              </div>
-                              <div className="flex flex-col items-center gap-1 p-2 bg-background rounded">
-                                <Wheat className="h-4 w-4 text-amber-500" aria-hidden="true" />
-                                <span className="text-xs font-medium">{recipe.nutrition.carbs}g</span>
-                                <span className="text-xs text-muted-foreground">carbs</span>
-                              </div>
-                              <div className="flex flex-col items-center gap-1 p-2 bg-background rounded">
-                                <Droplet className="h-4 w-4 text-yellow-500" aria-hidden="true" />
-                                <span className="text-xs font-medium">{recipe.nutrition.fat}g</span>
-                                <span className="text-xs text-muted-foreground">fat</span>
-                              </div>
+                            <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2">Nutrition per serving</p>
+                            <div className="flex bg-card border border-[var(--cream-300)] rounded-lg overflow-hidden">
+                              {[
+                                { val: recipe.nutrition.calories, unit: "kcal", label: "Cal" },
+                                { val: `${recipe.nutrition.protein}g`, unit: "protein", label: "Pro" },
+                                { val: `${recipe.nutrition.carbs}g`, unit: "carbs", label: "Carb" },
+                                { val: `${recipe.nutrition.fat}g`, unit: "fat", label: "Fat" },
+                              ].map((n, i) => (
+                                <div key={n.label} className={`flex-1 py-2 px-2 text-center ${i < 3 ? "border-r border-[var(--cream-200)]" : ""}`}>
+                                  <span className="text-[14px] text-foreground block">{n.val}</span>
+                                  <span className="font-mono text-[7px] tracking-wider uppercase text-[var(--stone-500)]">{n.label}</span>
+                                </div>
+                              ))}
                             </div>
                           </div>
                         )}

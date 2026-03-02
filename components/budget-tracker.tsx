@@ -1,10 +1,9 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { DollarSign, TrendingDown, TrendingUp, ChevronDown, ChevronUp } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
+import { ChevronDown, ChevronUp } from "lucide-react"
 
 interface BudgetTrackerProps {
   actualSpending: number
@@ -22,81 +21,63 @@ export function BudgetTracker({ actualSpending, weeklyBudget, onBudgetChange }: 
 
   if (weeklyBudget > 0 && !isExpanded) {
     return (
-      <button onClick={() => setIsExpanded(true)} className="w-full text-left group" aria-label="Expand budget details">
-        <Card className="hover:shadow-lg transition-all shadow-md border-0 bg-gradient-to-br from-background to-muted/30">
-          <CardContent className="py-5">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center h-11 w-11 rounded-full bg-primary/10 text-primary">
-                    <DollarSign className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Weekly Budget</div>
-                    <div className="text-lg">${weeklyBudget.toFixed(0)}</div>
-                  </div>
-                </div>
-                <ChevronDown
-                  className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors"
-                  aria-hidden="true"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className={`h-full transition-all ${
-                      isOverBudget ? "bg-destructive" : percentUsed > 80 ? "bg-orange-500" : "bg-primary"
-                    }`}
-                    style={{ width: `${Math.min(percentUsed, 100)}%` }}
-                    role="progressbar"
-                    aria-valuenow={percentUsed}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-label={`${percentUsed.toFixed(0)}% of budget used`}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">{percentUsed.toFixed(0)}% used</span>
-                  <span className={`${isOverBudget ? "text-destructive" : "text-primary"}`}>
-                    ${Math.abs(remaining).toFixed(2)} {isOverBudget ? "over" : "left"}
-                  </span>
-                </div>
-              </div>
+      <button
+        onClick={() => setIsExpanded(true)}
+        className="w-full text-left group"
+        aria-label="Expand budget details"
+      >
+        <div className="bg-card border border-[var(--cream-300)] rounded-xl p-4 shadow-warm-xs transition-all hover:border-[var(--cream-400)]">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[13px] text-[var(--stone-700)]">Weekly grocery estimate</span>
+            <div className="flex items-center gap-2">
+              <span className={`font-mono text-[13px] ${isOverBudget ? "text-[var(--terra-d)]" : "text-foreground"}`}>
+                ${totalCost.toFixed(2)} / ${weeklyBudget.toFixed(0)}
+              </span>
+              <ChevronDown className="h-4 w-4 text-[var(--stone-500)] group-hover:text-foreground transition-colors" aria-hidden="true" />
             </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="w-full h-1 bg-[var(--cream-200)] rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all ${isOverBudget ? "bg-[var(--terracotta)]" : "bg-[var(--sage)]"}`}
+              style={{ width: `${Math.min(percentUsed, 100)}%` }}
+              role="progressbar"
+              aria-valuenow={percentUsed}
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-label={`${percentUsed.toFixed(0)}% of budget used`}
+            />
+          </div>
+          <p className={`text-[11px] mt-1.5 ${isOverBudget ? "text-[var(--terra-d)]" : "text-[var(--stone-600)]"}`}>
+            {isOverBudget
+              ? `$${Math.abs(remaining).toFixed(2)} over — consider swapping a meal`
+              : `$${remaining.toFixed(2)} remaining this week`}
+          </p>
+        </div>
       </button>
     )
   }
 
   return (
-    <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30">
-      <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base flex items-center gap-2">
-            <DollarSign className="h-4 w-4" aria-hidden="true" />
-            Weekly Budget
-          </CardTitle>
-          {weeklyBudget > 0 && (
-            <button
-              onClick={() => setIsExpanded(false)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              aria-label="Collapse budget details"
-            >
-              <ChevronUp className="h-4 w-4" />
-            </button>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="budget-input" className="text-xs text-muted-foreground">
+    <div className="bg-card border border-[var(--cream-300)] rounded-xl p-4 shadow-warm-xs">
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[13px] text-foreground">Weekly Budget</span>
+        {weeklyBudget > 0 && (
+          <button
+            onClick={() => setIsExpanded(false)}
+            className="text-[var(--stone-500)] hover:text-foreground transition-colors"
+            aria-label="Collapse budget details"
+          >
+            <ChevronUp className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+      <div className="space-y-3">
+        <div className="space-y-1.5">
+          <Label htmlFor="budget-input" className="text-[11px] text-[var(--stone-600)]">
             Set your weekly budget
           </Label>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[13px] text-[var(--stone-500)]">$</span>
             <Input
               id="budget-input"
               type="number"
@@ -104,7 +85,7 @@ export function BudgetTracker({ actualSpending, weeklyBudget, onBudgetChange }: 
               step="5"
               value={weeklyBudget || ""}
               onChange={(e) => onBudgetChange(Number(e.target.value))}
-              className="pl-7"
+              className="pl-7 h-9 border-[var(--cream-300)] bg-card focus:border-[var(--sage)] text-[13px]"
               placeholder="0.00"
               aria-label="Weekly budget amount"
             />
@@ -113,31 +94,23 @@ export function BudgetTracker({ actualSpending, weeklyBudget, onBudgetChange }: 
 
         {weeklyBudget > 0 && (
           <>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Spent</span>
-                <span>${totalCost.toFixed(2)}</span>
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-[var(--stone-700)]">Spent</span>
+                <span className="font-mono">${totalCost.toFixed(2)}</span>
               </div>
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-muted-foreground">Remaining</span>
-                <span className={`flex items-center gap-1 ${isOverBudget ? "text-destructive" : "text-primary"}`}>
-                  {isOverBudget ? (
-                    <TrendingUp className="h-3 w-3" aria-hidden="true" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" aria-hidden="true" />
-                  )}
-                  ${Math.abs(remaining).toFixed(2)}
-                  {isOverBudget && " over"}
+              <div className="flex items-center justify-between text-[12px]">
+                <span className="text-[var(--stone-700)]">Remaining</span>
+                <span className={`font-mono ${isOverBudget ? "text-[var(--terra-d)]" : "text-[var(--sage-d)]"}`}>
+                  ${Math.abs(remaining).toFixed(2)}{isOverBudget ? " over" : ""}
                 </span>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <div className="h-2 bg-muted rounded-full overflow-hidden">
+            <div className="space-y-1">
+              <div className="w-full h-1 bg-[var(--cream-200)] rounded-full overflow-hidden">
                 <div
-                  className={`h-full transition-all ${
-                    isOverBudget ? "bg-destructive" : percentUsed > 80 ? "bg-orange-500" : "bg-primary"
-                  }`}
+                  className={`h-full rounded-full transition-all ${isOverBudget ? "bg-[var(--terracotta)]" : "bg-[var(--sage)]"}`}
                   style={{ width: `${Math.min(percentUsed, 100)}%` }}
                   role="progressbar"
                   aria-valuenow={percentUsed}
@@ -146,17 +119,17 @@ export function BudgetTracker({ actualSpending, weeklyBudget, onBudgetChange }: 
                   aria-label={`${percentUsed.toFixed(0)}% of budget used`}
                 />
               </div>
-              <p className="text-xs text-muted-foreground text-center">{percentUsed.toFixed(0)}% of budget used</p>
+              <p className="text-[10px] text-[var(--stone-600)] text-center">{percentUsed.toFixed(0)}% of budget used</p>
             </div>
 
             {isOverBudget && (
-              <p className="text-xs text-destructive bg-destructive/10 p-2 rounded" role="alert">
-                You're over budget! Consider choosing more affordable meals.
+              <p className="text-[11px] text-[var(--terra-d)] bg-[var(--terra-l)] p-2.5 rounded-lg" role="alert">
+                Over budget — consider swapping a meal this week
               </p>
             )}
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

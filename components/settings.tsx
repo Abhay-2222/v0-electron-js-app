@@ -89,15 +89,15 @@ export function Settings({
   return (
     <div className="space-y-6 max-w-2xl mx-auto">
       {/* Profile Section */}
-      <Card className="shadow-sm border-border/40">
+      <Card className="shadow-warm-xs border-[var(--cream-300)]">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <User className="h-5 w-5 text-primary" aria-hidden="true" />
+            <div className="h-10 w-10 rounded-full bg-[var(--sage-l)] flex items-center justify-center">
+              <User className="h-5 w-5 text-[var(--sage-d)]" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base">Profile</CardTitle>
-              <CardDescription className="text-xs">Manage your account</CardDescription>
+              <CardTitle className="text-[14px] text-foreground">Profile</CardTitle>
+              <CardDescription className="text-[11px] text-[var(--stone-600)]">Manage your account</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -167,15 +167,15 @@ export function Settings({
       </Card>
 
       {/* Preferences Section */}
-      <Card className="shadow-sm border-border/40">
+      <Card className="shadow-warm-xs border-[var(--cream-300)]">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Palette className="h-5 w-5 text-primary" aria-hidden="true" />
+            <div className="h-10 w-10 rounded-full bg-[var(--sage-l)] flex items-center justify-center">
+              <Palette className="h-5 w-5 text-[var(--sage-d)]" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base">Preferences</CardTitle>
-              <CardDescription className="text-xs">Customize your experience</CardDescription>
+              <CardTitle className="text-[14px] text-foreground">Preferences</CardTitle>
+              <CardDescription className="text-[11px] text-[var(--stone-600)]">Customize your experience</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -215,15 +215,15 @@ export function Settings({
       </Card>
 
       {/* Data Management Section */}
-      <Card className="shadow-sm border-border/40">
+      <Card className="shadow-warm-xs border-[var(--cream-300)]">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Database className="h-5 w-5 text-primary" aria-hidden="true" />
+            <div className="h-10 w-10 rounded-full bg-[var(--sage-l)] flex items-center justify-center">
+              <Database className="h-5 w-5 text-[var(--sage-d)]" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base">Data</CardTitle>
-              <CardDescription className="text-xs">Manage your meal data</CardDescription>
+              <CardTitle className="text-[14px] text-foreground">Data</CardTitle>
+              <CardDescription className="text-[11px] text-[var(--stone-600)]">Manage your meal data</CardDescription>
             </div>
           </div>
         </CardHeader>
@@ -260,15 +260,15 @@ export function Settings({
 
       {/* Analytics Section */}
       {analytics.totalMeals > 0 && (
-        <Card className="shadow-sm border-border/40">
+        <Card className="shadow-warm-xs border-[var(--cream-300)]">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <BarChart3 className="h-5 w-5 text-primary" aria-hidden="true" />
+              <div className="h-10 w-10 rounded-full bg-[var(--sage-l)] flex items-center justify-center">
+                <BarChart3 className="h-5 w-5 text-[var(--sage-d)]" aria-hidden="true" />
               </div>
               <div>
-                <CardTitle className="text-base">Analytics</CardTitle>
-                <CardDescription className="text-xs">
+                <CardTitle className="text-[14px] text-foreground">Analytics</CardTitle>
+                <CardDescription className="text-[11px] text-[var(--stone-600)]">
                   Last {analytics.weeksAnalyzed} weeks • {analytics.totalMeals} meals
                 </CardDescription>
               </div>
@@ -294,11 +294,11 @@ export function Settings({
                 </div>
                 <div className="mt-1 text-xs">
                   {analytics.budgetAdherence >= 0 ? (
-                    <span className="text-green-600">
+                    <span className="text-[var(--sage-d)]">
                       ${(weeklyBudget - analytics.avgWeeklySpend).toFixed(2)} under budget
                     </span>
                   ) : (
-                    <span className="text-red-600">
+                    <span className="text-[var(--terra-d)]">
                       ${Math.abs(weeklyBudget - analytics.avgWeeklySpend).toFixed(2)} over budget
                     </span>
                   )}
@@ -310,15 +310,15 @@ export function Settings({
       )}
 
       {/* About Section */}
-      <Card className="shadow-sm border-border/40">
+      <Card className="shadow-warm-xs border-[var(--cream-300)]">
         <CardHeader className="pb-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Info className="h-5 w-5 text-primary" aria-hidden="true" />
+            <div className="h-10 w-10 rounded-full bg-[var(--sage-l)] flex items-center justify-center">
+              <Info className="h-5 w-5 text-[var(--sage-d)]" aria-hidden="true" />
             </div>
             <div>
-              <CardTitle className="text-base">About</CardTitle>
-              <CardDescription className="text-xs">App info & support</CardDescription>
+              <CardTitle className="text-[14px] text-foreground">About</CardTitle>
+              <CardDescription className="text-[11px] text-[var(--stone-600)]">App info & support</CardDescription>
             </div>
           </div>
         </CardHeader>

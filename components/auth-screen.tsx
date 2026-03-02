@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Leaf, Eye, EyeOff, AlertCircle } from "lucide-react"
+import { Eye, EyeOff, AlertCircle } from "lucide-react"
 import { validatePasswordStrength, validateEmail, checkRateLimit } from "@/lib/security"
 
 interface AuthScreenProps {
@@ -68,18 +68,18 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-y-auto">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/90 flex items-center justify-center shadow-lg shadow-primary/20">
-            <Leaf className="w-10 h-10 text-primary-foreground" strokeWidth={1.5} />
-          </div>
-          <span className="text-base text-foreground tracking-tight">MealPlanner</span>
+        {/* Logo — Lora serif italic wordmark */}
+        <div className="mb-8 flex flex-col items-center gap-2">
+          <h1 className="font-serif text-[32px] italic text-foreground">MealPlan</h1>
+          <p className="font-mono text-[8px] tracking-[0.16em] uppercase text-[var(--stone-500)]">
+            Plan smart, eat well
+          </p>
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl text-center text-foreground mb-8 max-w-sm">
+        <p className="text-[17px] text-center text-foreground mb-8 max-w-sm">
           {isSignUp ? "Create your account" : "Sign in to your account"}
-        </h1>
+        </p>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
@@ -192,7 +192,7 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
           {/* Submit button */}
           <Button
             type="submit"
-            className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-base shadow-lg shadow-primary/25"
+            className="w-full h-12 bg-[var(--sage-d)] hover:bg-[var(--sage)] text-white text-[13px] rounded-lg border-[1.5px] border-[var(--sage-d)] hover:border-[var(--sage)] transition-all"
             disabled={isSignUp && !agreedToTerms}
           >
             {isSignUp ? "Create Account" : "Sign in"}

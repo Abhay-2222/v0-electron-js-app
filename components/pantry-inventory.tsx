@@ -124,10 +124,10 @@ export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
   )
 
   return (
-    <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30">
+    <Card className="shadow-warm-xs border-[var(--cream-300)] bg-card">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl sm:text-2xl">Pantry</CardTitle>
+          <CardTitle className="font-serif text-[22px] italic text-foreground">Pantry</CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" aria-label="Add pantry item">
@@ -306,7 +306,7 @@ export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-lg shadow-sm bg-gradient-to-br from-background to-muted/20"
+                      className="flex items-center justify-between p-3 rounded-xl bg-card border border-[var(--cream-300)] shadow-warm-xs"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
