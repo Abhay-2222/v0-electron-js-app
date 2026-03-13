@@ -16,12 +16,12 @@ import { WeekHistoryView } from "@/components/week-history"
 import {
   Calendar,
   ShoppingCart,
-  Contrast,
   Package,
   SettingsIcon,
   MoreVertical,
   User,
   LogOut,
+  SunMedium,
 } from "lucide-react"
 import { getWeekKey, getWeekStart, getWeekEnd } from "@/lib/date-utils"
 import { Button } from "@/components/ui/button"
@@ -224,7 +224,7 @@ export default function MealPlannerPage() {
                   onClick={() => setHighContrast(!highContrast)}
                   className={highContrast ? "bg-accent" : ""}
                 >
-                  <Contrast className="mr-2 h-4 w-4" />
+                  <SunMedium className="mr-2 h-4 w-4" />
                   High Contrast
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
