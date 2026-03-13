@@ -1,10 +1,10 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import type { MealPlan, Ingredient, PantryItem } from "@/lib/types"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShoppingCart, Download, Share2, MessageCircle, Mail } from "lucide-react"
+import { ShoppingCart, Download, Share2, MessageCircle, Mail, ExternalLink, Loader2 } from "lucide-react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { calculateIngredientCost } from "@/lib/ingredient-prices"
@@ -21,6 +21,8 @@ interface ConsolidatedIngredient extends Ingredient {
 
 export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
   const [checkedItems, setCheckedItems] = useLocalStorage<Set<string>>("grocery-checked-items", new Set())
+  const [instacartLoading, setInstacartLoading] = useState(false)
+  const [instacartError, setInstacartError] = useState<string | null>(null)
 
   const groceryList = useMemo(() => {
     const ingredientMap = new Map<string, ConsolidatedIngredient>()
@@ -103,6 +105,30 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     a.download = "grocery-list.txt"
     a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleInstacart = async () => {
+    setInstacartLoading(true)
+    setInstacartError(null)
+    try {
+      const allItems = groceryList.flatMap((group) =>
+        group.items
+          .filter((item) => !checkedItems.has(item.id))
+          .map((item) => ({ name: item.name, amount: item.amount, unit: item.unit }))
+      )
+      const response = await fetch("/api/instacart", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: allItems }),
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || "Failed to create list")
+      if (data.url) window.open(data.url, "_blank")
+    } catch (err) {
+      setInstacartError(err instanceof Error ? err.message : "Something went wrong")
+    } finally {
+      setInstacartLoading(false)
+    }
   }
 
   const handleShare = (method: "whatsapp" | "sms" | "email") => {
@@ -206,6 +232,29 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
             <span className="font-mono">{Math.round(completionPercentage)}%</span>
           </div>
         </div>
+      </div>
+
+      {/* Instacart CTA */}
+      <div>
+        <Button
+          onClick={handleInstacart}
+          disabled={instacartLoading || totalItems === 0}
+          className="w-full h-11 bg-[#009E59] hover:bg-[#007A44] text-white text-[13px] rounded-xl border-0 flex items-center justify-center gap-2 transition-colors"
+          aria-label="Order ingredients on Instacart"
+        >
+          {instacartLoading ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <ShoppingCart className="h-4 w-4" aria-hidden="true" />
+          )}
+          {instacartLoading ? "Creating list..." : "Order on Instacart"}
+          {!instacartLoading && <ExternalLink className="h-3 w-3 opacity-70" aria-hidden="true" />}
+        </Button>
+        {instacartError && (
+          <p className="text-[11px] text-[var(--terra-d)] mt-1.5 text-center" role="alert">
+            {instacartError}
+          </p>
+        )}
       </div>
 
       {/* Grocery items */}
