@@ -11,7 +11,7 @@ import { Settings } from "@/components/settings"
 import { useLocalStorage } from "@/hooks/use-local-storage"
 import { InitialSplash } from "@/components/initial-splash"
 import { AuthScreen } from "@/components/auth-screen"
-import { OnboardingSplash } from "@/components/onboarding-splash"
+import { OnboardingSplash, type OnboardingPrefs } from "@/components/onboarding-splash"
 import { WeekHistoryView } from "@/components/week-history"
 import {
   Calendar,
@@ -49,6 +49,7 @@ export default function MealPlannerPage() {
   const [activeTab, setActiveTab] = useState<"planner" | "grocery" | "pantry" | "settings" | "history">("planner")
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useLocalStorage("onboarding-completed", false)
   const [hasAuthenticated, setHasAuthenticated] = useLocalStorage("authenticated", false)
+  const [householdSize, setHouseholdSize] = useLocalStorage("household-size", 2)
   const [isClient, setIsClient] = useState(false)
   const [appState, setAppState] = useState<AppState>("initial-splash")
 
@@ -178,7 +179,14 @@ export default function MealPlannerPage() {
   if (appState === "onboarding") {
     return (
       <OnboardingSplash
-        onComplete={() => {
+        onComplete={(prefs: OnboardingPrefs) => {
+          // Persist preferences collected during onboarding
+          setHouseholdSize(prefs.householdSize)
+          if (prefs.weeklyBudget > 0) {
+            const newBudgets = { ...weeklyBudgets }
+            newBudgets[currentWeekKey] = prefs.weeklyBudget
+            setWeeklyBudgets(newBudgets)
+          }
           setHasCompletedOnboarding(true)
           setAppState("main")
         }}
