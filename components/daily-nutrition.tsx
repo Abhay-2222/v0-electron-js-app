@@ -14,10 +14,12 @@ export function DailyNutrition({ mealPlan, currentDay }: DailyNutritionProps) {
   const totals = meals.reduce(
     (acc, meal) => {
       if (meal.nutrition) {
-        acc.calories += meal.nutrition.calories
-        acc.protein += meal.nutrition.protein
-        acc.carbs += meal.nutrition.carbs
-        acc.fat += meal.nutrition.fat
+        // Divide by servings — recipe nutrition is for ALL servings, we show per-person
+        const servings = Math.max(1, meal.servings ?? 1)
+        acc.calories += meal.nutrition.calories / servings
+        acc.protein  += meal.nutrition.protein  / servings
+        acc.carbs    += meal.nutrition.carbs    / servings
+        acc.fat      += meal.nutrition.fat      / servings
       }
       return acc
     },

@@ -347,7 +347,7 @@
   }
 
   .animate-fade-in { animation: fade-in 1s ease-out; }
-  .animate-scale-in { animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1); }
+  .animate-scale-in { animation: scale-in 1.2s cubic-bezier(0.16, 1, 0.3, 1)); }
   .animate-slide-up-delayed { animation: slide-up-delayed 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both; }
 
   /* Philosophy note — callout block */
@@ -360,5 +360,123 @@
     color: var(--stone-700);
     line-height: 1.65;
     font-style: italic;
+  }
+
+  /* ── MOTION SYSTEM ADDITIONS ── */
+
+  @keyframes sheet-up {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  @keyframes dialog-in {
+    from { transform: scale(0.96) translateY(6px); opacity: 0; }
+    to   { transform: scale(1)    translateY(0);   opacity: 1; }
+  }
+  @keyframes meal-card-enter {
+    from { transform: scale(0.94) translateY(8px); opacity: 0; }
+    to   { transform: scale(1)    translateY(0);   opacity: 1; }
+  }
+  @keyframes meal-card-exit {
+    from { transform: scale(1)    translateX(0);    opacity: 1; max-height: 120px; }
+    to   { transform: scale(0.94) translateX(12px); opacity: 0; max-height: 0; }
+  }
+  @keyframes item-check {
+    0%   { transform: scale(1); }
+    40%  { transform: scale(0.96); }
+    100% { transform: scale(1); }
+  }
+  @keyframes text-mute {
+    from { color: var(--foreground); }
+    to   { color: var(--stone-500);  }
+  }
+  @keyframes count-up {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+  @keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position:  200% 0; }
+  }
+  @keyframes bar-fill {
+    from { width: 0%; }
+    to   { width: var(--bar-width, 60%); }
+  }
+  @keyframes page-enter {
+    from { opacity: 0; transform: translateY(4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes bounce-in {
+    0%   { transform: scale(0.82); opacity: 0; }
+    55%  { transform: scale(1.04); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  @keyframes tab-slide {
+    from { opacity: 0.5; transform: scaleX(0.8); }
+    to   { opacity: 1;   transform: scaleX(1); }
+  }
+  @keyframes sparkle-spin {
+    0%   { transform: rotate(0deg)   scale(1); }
+    50%  { transform: rotate(180deg) scale(1.1); }
+    100% { transform: rotate(360deg) scale(1); }
+  }
+
+  .animate-sheet-up      { animation: sheet-up       0.38s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .animate-dialog-in     { animation: dialog-in      0.22s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .animate-meal-enter    { animation: meal-card-enter 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .animate-meal-exit     { animation: meal-card-exit  0.20s cubic-bezier(0.4, 0, 1, 1) both; }
+  .animate-item-check    { animation: item-check      0.18s var(--ease) both; }
+  .animate-count-up      { animation: count-up        0.30s cubic-bezier(0, 0, 0.2, 1) both; }
+  .animate-page-enter    { animation: page-enter      280ms cubic-bezier(0, 0, 0.2, 1) both; }
+  .animate-bounce-in     { animation: bounce-in       0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .animate-tab-slide     { animation: tab-slide       var(--t-base) var(--ease) both; }
+  .animate-sparkle       { animation: sparkle-spin    0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+
+  .stagger > *:nth-child(1) { animation-delay: 0ms;   }
+  .stagger > *:nth-child(2) { animation-delay: 40ms;  }
+  .stagger > *:nth-child(3) { animation-delay: 80ms;  }
+  .stagger > *:nth-child(4) { animation-delay: 120ms; }
+  .stagger > *:nth-child(5) { animation-delay: 160ms; }
+  .stagger > *:nth-child(6) { animation-delay: 200ms; }
+  .stagger > *:nth-child(7) { animation-delay: 240ms; }
+
+  /* Skeleton — warm cream shimmer */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--cream-100) 25%,
+      var(--cream-200) 50%,
+      var(--cream-100) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s ease-in-out infinite;
+    border-radius: calc(var(--radius) - 4px);
+  }
+
+  /* Budget progress bar */
+  .budget-bar-fill {
+    animation: bar-fill 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    animation-delay: 0.1s;
+  }
+
+  /* Grocery item checked state */
+  .grocery-item-checked {
+    animation: item-check 0.18s var(--ease) both;
+  }
+  .grocery-item-checked .grocery-item-name {
+    animation: text-mute 0.20s cubic-bezier(0, 0, 0.2, 1) both;
+    text-decoration: line-through;
+    color: var(--stone-500);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+    .skeleton {
+      animation: none;
+      background: var(--cream-200);
+    }
   }
 }

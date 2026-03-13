@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react"
 import type { MealPlan, Ingredient, PantryItem } from "@/lib/types"
-import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { ShoppingCart, Download, Share2, MessageCircle, Mail, ExternalLink, Loader2 } from "lucide-react"
 import { useLocalStorage } from "@/hooks/use-local-storage"
@@ -17,10 +16,23 @@ interface GroceryListProps {
 interface ConsolidatedIngredient extends Ingredient {
   checked: boolean
   estimatedCost: number
+  fromPantry?: boolean
+}
+
+const CATEGORY_ORDER = ["produce", "meat", "dairy", "pantry", "frozen", "other"]
+
+const CATEGORY_ICONS: Record<string, string> = {
+  produce: "🥦",
+  meat:    "🥩",
+  dairy:   "🧀",
+  pantry:  "🫙",
+  frozen:  "🧊",
+  other:   "📦",
 }
 
 export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
-  const [checkedItems, setCheckedItems] = useLocalStorage<Set<string>>("grocery-checked-items", new Set())
+  const [checkedItems, setCheckedItems] = useLocalStorage<string[]>("grocery-checked-items", [])
+  const checkedSet = useMemo(() => new Set(checkedItems), [checkedItems])
   const [instacartLoading, setInstacartLoading] = useState(false)
   const [instacartError, setInstacartError] = useState<string | null>(null)
 
@@ -31,11 +43,9 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
       Object.values(dayMeals).forEach((recipe) => {
         recipe.ingredients.forEach((ingredient) => {
           const key = `${ingredient.name.toLowerCase()}-${ingredient.unit}`
-
           const pantryItem = pantryItems.find(
             (p) => p.name.toLowerCase() === ingredient.name.toLowerCase() && p.unit === ingredient.unit,
           )
-
           const neededAmount = pantryItem ? Math.max(0, ingredient.amount - pantryItem.amount) : ingredient.amount
 
           if (neededAmount > 0) {
@@ -47,7 +57,7 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
               ingredientMap.set(key, {
                 ...ingredient,
                 amount: neededAmount,
-                checked: checkedItems.has(ingredient.id),
+                checked: checkedSet.has(ingredient.id),
                 estimatedCost: calculateIngredientCost(ingredient.name, neededAmount, ingredient.unit),
               })
             }
@@ -57,72 +67,70 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     })
 
     const grouped: Record<string, ConsolidatedIngredient[]> = {}
-    ingredientMap.forEach((ingredient) => {
-      if (!grouped[ingredient.category]) {
-        grouped[ingredient.category] = []
-      }
-      grouped[ingredient.category].push(ingredient)
+    ingredientMap.forEach((item) => {
+      if (!grouped[item.category]) grouped[item.category] = []
+      grouped[item.category].push(item)
     })
 
-    const categoryOrder = ["produce", "meat", "dairy", "pantry", "frozen", "other"]
-    return categoryOrder
+    return CATEGORY_ORDER
       .filter((cat) => grouped[cat])
       .map((cat) => ({
         category: cat,
         items: grouped[cat].sort((a, b) => a.name.localeCompare(b.name)),
       }))
-  }, [mealPlan, checkedItems, pantryItems])
+  }, [mealPlan, pantryItems, checkedSet])
 
-  const handleToggleItem = (itemId: string) => {
-    setCheckedItems((prev) => {
-      const newSet = new Set(prev)
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId)
-      } else {
-        newSet.add(itemId)
-      }
-      return newSet
-    })
+  const allItems = groceryList.flatMap((g) => g.items)
+  const totalItems = allItems.length
+  const checkedCount = allItems.filter((i) => checkedSet.has(i.id)).length
+  const completionPct = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0
+  const totalEstimatedCost = allItems.reduce((sum, i) => sum + i.estimatedCost, 0)
+
+  const toggleItem = (id: string) => {
+    const next = checkedSet.has(id)
+      ? checkedItems.filter((x) => x !== id)
+      : [...checkedItems, id]
+    setCheckedItems(next)
   }
 
-  const generateGroceryText = () => {
-    return groceryList
-      .map((group) => {
-        const items = group.items
-          .map((item) => `  ${item.checked ? "✓" : "○"} ${item.amount} ${item.unit} ${item.name}`)
-          .join("\n")
-        return `${group.category.toUpperCase()}\n${items}`
-      })
-      .join("\n\n")
-  }
+  const generateText = () =>
+    groceryList.map((g) => {
+      const lines = g.items.map((i) => `  ${checkedSet.has(i.id) ? "✓" : "○"} ${i.amount} ${i.unit} ${i.name}`).join("\n")
+      return `${g.category.toUpperCase()}\n${lines}`
+    }).join("\n\n")
 
   const handleExport = () => {
-    const text = generateGroceryText()
-    const blob = new Blob([text], { type: "text/plain" })
+    const blob = new Blob([generateText()], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
-    a.href = url
-    a.download = "grocery-list.txt"
-    a.click()
+    a.href = url; a.download = "grocery-list.txt"; a.click()
     URL.revokeObjectURL(url)
+  }
+
+  const handleShare = (method: "whatsapp" | "sms" | "email") => {
+    const encoded = encodeURIComponent(generateText())
+    const urls = {
+      whatsapp: `https://wa.me/?text=${encoded}`,
+      sms: `sms:?body=${encoded}`,
+      email: `mailto:?subject=Grocery List&body=${encoded}`,
+    }
+    window.open(urls[method], "_blank")
   }
 
   const handleInstacart = async () => {
     setInstacartLoading(true)
     setInstacartError(null)
     try {
-      const allItems = groceryList.flatMap((group) =>
-        group.items
-          .filter((item) => !checkedItems.has(item.id))
-          .map((item) => ({ name: item.name, amount: item.amount, unit: item.unit }))
+      const items = groceryList.flatMap((g) =>
+        g.items.filter((i) => !checkedSet.has(i.id)).map((i) => ({ name: i.name, amount: i.amount, unit: i.unit }))
       )
-      const response = await fetch("/api/instacart", {
+      const res = await fetch("/api/instacart", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items: allItems }),
+        body: JSON.stringify({ items }),
       })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error || "Failed to create list")
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || "Failed to create list")
       if (data.url) window.open(data.url, "_blank")
     } catch (err) {
       setInstacartError(err instanceof Error ? err.message : "Something went wrong")
@@ -131,179 +139,192 @@ export function GroceryList({ mealPlan, pantryItems = [] }: GroceryListProps) {
     }
   }
 
-  const handleShare = (method: "whatsapp" | "sms" | "email") => {
-    const text = generateGroceryText()
-    const encodedText = encodeURIComponent(text)
-
-    switch (method) {
-      case "whatsapp":
-        window.open(`https://wa.me/?text=${encodedText}`, "_blank")
-        break
-      case "sms":
-        window.open(`sms:?body=${encodedText}`, "_blank")
-        break
-      case "email":
-        window.open(`mailto:?subject=Grocery List&body=${encodedText}`, "_blank")
-        break
-    }
-  }
-
-  const totalItems = groceryList.reduce((sum, group) => sum + group.items.length, 0)
-  const checkedCount = checkedItems.size
-  const completionPercentage = totalItems > 0 ? (checkedCount / totalItems) * 100 : 0
-  const totalEstimatedCost = groceryList.reduce(
-    (sum, group) => sum + group.items.reduce((groupSum, item) => groupSum + item.estimatedCost, 0),
-    0,
-  )
-
   if (totalItems === 0) {
     return (
-      <div className="py-16 text-center">
-        <ShoppingCart className="h-12 w-12 mx-auto mb-3 text-[var(--cream-400)]" aria-hidden="true" />
-        <p className="text-[13px] text-[var(--stone-600)] px-4">Add recipes to your meal plan to generate a grocery list</p>
+      <div className="py-16 text-center space-y-3">
+        <ShoppingCart className="h-12 w-12 mx-auto" style={{ color: "var(--cream-300)" }} />
+        <p style={{ fontSize: 15, color: "var(--stone-600)" }}>Your grocery list is empty</p>
+        <p style={{ fontSize: 12, color: "var(--stone-400)" }}>Add meals to your plan and ingredients will appear here</p>
       </div>
     )
   }
 
   return (
     <div className="space-y-5">
+
       {/* Header */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="font-serif text-[22px] italic text-foreground">Grocery List</h2>
-          <div className="flex gap-1.5">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 px-2.5 text-[var(--stone-600)] hover:bg-[var(--cream-100)]"
-                  aria-label="Share grocery list"
-                >
-                  <Share2 className="h-3.5 w-3.5" aria-hidden="true" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleShare("whatsapp")}>
-                  <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                  WhatsApp
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleShare("sms")}>
-                  <MessageCircle className="h-4 w-4 mr-2" aria-hidden="true" />
-                  SMS
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleShare("email")}>
-                  <Mail className="h-4 w-4 mr-2" aria-hidden="true" />
-                  Email
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleExport}
-              className="h-8 px-2.5 text-[var(--stone-600)] hover:bg-[var(--cream-100)]"
-              aria-label="Export grocery list"
-            >
-              <Download className="h-3.5 w-3.5" aria-hidden="true" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary bar */}
-        <div className="bg-card border border-[var(--cream-300)] rounded-xl p-4 shadow-warm-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] text-[var(--stone-700)]">Estimated total</span>
-            <span className="font-mono text-[13px] text-foreground">${totalEstimatedCost.toFixed(2)}</span>
-          </div>
-          <div className="w-full h-1.5 bg-[var(--cream-200)] rounded-full overflow-hidden mb-1.5">
-            <div
-              className="h-full rounded-full bg-[var(--sage)] transition-all"
-              style={{ width: `${completionPercentage}%` }}
-              role="progressbar"
-              aria-valuenow={completionPercentage}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-label={`${Math.round(completionPercentage)}% complete`}
-            />
-          </div>
-          <div className="flex items-center justify-between text-[11px] text-[var(--stone-600)]">
-            <span>{checkedCount} of {totalItems} items</span>
-            <span className="font-mono">{Math.round(completionPercentage)}%</span>
-          </div>
+      <div className="flex items-center justify-between">
+        <h2 className="font-serif italic text-foreground" style={{ fontSize: 24 }}>Grocery List</h2>
+        <div className="flex gap-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="h-8 w-8 rounded-xl flex items-center justify-center transition-all"
+                style={{ background: "var(--cream-100)", color: "var(--stone-600)" }}
+                aria-label="Share"
+              >
+                <Share2 className="h-3.5 w-3.5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleShare("whatsapp")}>
+                <MessageCircle className="h-4 w-4 mr-2" />WhatsApp
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShare("sms")}>
+                <MessageCircle className="h-4 w-4 mr-2" />SMS
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => handleShare("email")}>
+                <Mail className="h-4 w-4 mr-2" />Email
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button
+            onClick={handleExport}
+            className="h-8 w-8 rounded-xl flex items-center justify-center transition-all"
+            style={{ background: "var(--cream-100)", color: "var(--stone-600)" }}
+            aria-label="Export"
+          >
+            <Download className="h-3.5 w-3.5" />
+          </button>
         </div>
       </div>
 
-      {/* Instacart CTA */}
-      <div>
-        <Button
-          onClick={handleInstacart}
-          disabled={instacartLoading || totalItems === 0}
-          className="w-full h-11 bg-[#009E59] hover:bg-[#007A44] text-white text-[13px] rounded-xl border-0 flex items-center justify-center gap-2 transition-colors"
-          aria-label="Order ingredients on Instacart"
+      {/* Summary card */}
+      <div
+        className="rounded-2xl p-4"
+        style={{ background: "var(--card)", border: "1.5px solid var(--cream-200)", boxShadow: "var(--sh-xs)" }}
+      >
+        <div className="flex items-center justify-between mb-3">
+          <span style={{ fontSize: 12, color: "var(--stone-700)" }}>Estimated total</span>
+          <span className="font-mono" style={{ fontSize: 14, color: "var(--foreground)" }}>
+            ${totalEstimatedCost.toFixed(2)}
+          </span>
+        </div>
+        <div
+          className="w-full rounded-full overflow-hidden mb-2"
+          style={{ height: 5, background: "var(--cream-200)" }}
         >
-          {instacartLoading ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          ) : (
-            <ShoppingCart className="h-4 w-4" aria-hidden="true" />
-          )}
-          {instacartLoading ? "Creating list..." : "Order on Instacart"}
-          {!instacartLoading && <ExternalLink className="h-3 w-3 opacity-70" aria-hidden="true" />}
-        </Button>
-        {instacartError && (
-          <p className="text-[11px] text-[var(--terra-d)] mt-1.5 text-center" role="alert">
-            {instacartError}
-          </p>
-        )}
+          <div
+            className="h-full rounded-full transition-all duration-500"
+            style={{
+              width: `${completionPct}%`,
+              background: completionPct === 100 ? "var(--sage)" : "var(--sage)",
+            }}
+            role="progressbar"
+            aria-valuenow={Math.round(completionPct)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          />
+        </div>
+        <div className="flex items-center justify-between">
+          <span style={{ fontSize: 11, color: "var(--stone-500)" }}>
+            {checkedCount} of {totalItems} items
+          </span>
+          <span className="font-mono" style={{ fontSize: 11, color: "var(--stone-500)" }}>
+            {Math.round(completionPct)}%
+          </span>
+        </div>
       </div>
 
-      {/* Grocery items */}
-      <div className="space-y-5" role="region" aria-label="Grocery items by category">
+      {/* Instacart */}
+      <button
+        onClick={handleInstacart}
+        disabled={instacartLoading}
+        className="w-full h-12 rounded-2xl flex items-center justify-center gap-2 transition-all"
+        style={{
+          background: "#009E59",
+          color: "#fff",
+          fontSize: 13,
+          border: "none",
+          opacity: instacartLoading ? 0.7 : 1,
+        }}
+        aria-label="Order on Instacart"
+      >
+        {instacartLoading
+          ? <Loader2 className="h-4 w-4 animate-spin" />
+          : <ShoppingCart className="h-4 w-4" />}
+        {instacartLoading ? "Creating list…" : "Order on Instacart"}
+        {!instacartLoading && <ExternalLink className="h-3 w-3 opacity-70" />}
+      </button>
+      {instacartError && (
+        <p className="text-center" style={{ fontSize: 11, color: "var(--terra-d)" }} role="alert">
+          {instacartError}
+        </p>
+      )}
+
+      {/* Items by category */}
+      <div className="space-y-6" role="region" aria-label="Grocery items">
         {groceryList.map((group) => (
           <div key={group.category}>
-            <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2 pb-2 border-b border-[var(--cream-200)]">
-              {group.category}
-            </p>
+            {/* Category header */}
+            <div
+              className="flex items-center gap-2 mb-2 pb-2"
+              style={{ borderBottom: "1px solid var(--cream-200)" }}
+            >
+              <span style={{ fontSize: 16 }} aria-hidden="true">{CATEGORY_ICONS[group.category]}</span>
+              <span
+                className="font-mono uppercase"
+                style={{ fontSize: 9, letterSpacing: "0.14em", color: "var(--stone-500)" }}
+              >
+                {group.category}
+              </span>
+              <span className="font-mono ml-auto" style={{ fontSize: 9, color: "var(--stone-400)" }}>
+                {group.items.filter((i) => checkedSet.has(i.id)).length}/{group.items.length}
+              </span>
+            </div>
+
             <div className="space-y-1" role="group" aria-label={`${group.category} items`}>
-              {group.items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex items-center gap-3 p-3 bg-card border border-[var(--cream-300)] rounded-xl transition-all ${
-                    checkedItems.has(item.id) ? "opacity-45" : ""
-                  }`}
-                >
+              {group.items.map((item) => {
+                const isChecked = checkedSet.has(item.id)
+                return (
                   <div
-                    className={`w-5 h-5 rounded flex-shrink-0 border-[1.5px] flex items-center justify-center cursor-pointer transition-all ${
-                      checkedItems.has(item.id)
-                        ? "bg-[var(--sage)] border-[var(--sage)] text-white"
-                        : "border-[var(--cream-400)]"
-                    }`}
-                    onClick={() => handleToggleItem(item.id)}
-                    role="checkbox"
-                    aria-checked={checkedItems.has(item.id)}
-                    aria-label={`${checkedItems.has(item.id) ? "Uncheck" : "Check"} ${item.name}`}
-                    tabIndex={0}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleToggleItem(item.id) }}
+                    key={item.id}
+                    className="flex items-center gap-3 rounded-xl px-3 transition-all"
+                    style={{
+                      height: 48,
+                      background: isChecked ? "var(--cream-50)" : "var(--card)",
+                      border: `1px solid ${isChecked ? "var(--cream-200)" : "var(--cream-300)"}`,
+                      opacity: isChecked ? 0.55 : 1,
+                    }}
                   >
-                    {checkedItems.has(item.id) && (
-                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                        <path d="M1 4L3.5 6.5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                      </svg>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className={`text-[13px] ${checkedItems.has(item.id) ? "line-through text-[var(--stone-500)]" : "text-foreground"}`}>
+                    <div
+                      className="h-5 w-5 rounded flex-shrink-0 border flex items-center justify-center cursor-pointer transition-all"
+                      style={{
+                        background: isChecked ? "var(--sage)" : "transparent",
+                        borderColor: isChecked ? "var(--sage)" : "var(--cream-400)",
+                        borderWidth: "1.5px",
+                      }}
+                      onClick={() => toggleItem(item.id)}
+                      role="checkbox"
+                      aria-checked={isChecked}
+                      aria-label={`${isChecked ? "Uncheck" : "Check"} ${item.name}`}
+                      tabIndex={0}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") toggleItem(item.id) }}
+                    >
+                      {isChecked && (
+                        <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                          <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      )}
+                    </div>
+
+                    <span
+                      className="flex-1"
+                      style={{
+                        fontSize: 13,
+                        color: isChecked ? "var(--stone-500)" : "var(--foreground)",
+                        textDecoration: isChecked ? "line-through" : "none",
+                      }}
+                    >
                       {item.name}
                     </span>
-                    <span className="text-[10px] text-[var(--stone-500)] ml-1.5">
-                      {group.category}
+
+                    <span className="font-mono flex-shrink-0" style={{ fontSize: 12, color: "var(--stone-500)" }}>
+                      {item.amount} {item.unit}
                     </span>
                   </div>
-                  <span className="font-mono text-[11px] text-[var(--stone-600)] flex-shrink-0">
-                    {item.amount} {item.unit}
-                  </span>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         ))}

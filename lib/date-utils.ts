@@ -50,5 +50,6 @@ export function formatDayWithDate(date: Date): string {
 }
 
 export function getDayKey(date: Date): string {
-  return date.toLocaleDateString("en-US", { weekday: "long" })
+  // Returns "2026-03-13" — ISO format required by meal-utils date parsing
+  return date.toLocaleDateString("en-CA") // en-CA locale produces YYYY-MM-DD
 }

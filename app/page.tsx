@@ -244,6 +244,7 @@ export default function MealPlannerPage() {
             <div className="animate-slide-up">
               <WeeklyPlanner
                 mealPlan={currentMealPlan}
+                allMealPlans={allMealPlans}
                 onUpdateMealPlan={handleUpdateMealPlan}
                 onAddMeal={handleAddMeal}
                 currentWeekStart={currentWeekStart}

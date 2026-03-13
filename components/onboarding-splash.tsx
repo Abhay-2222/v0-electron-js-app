@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import Image from "next/image"
 
@@ -17,12 +16,12 @@ export interface OnboardingPrefs {
 }
 
 const GOALS = [
-  { id: "balanced", label: "Eat balanced" },
-  { id: "save-money", label: "Save money" },
-  { id: "lose-weight", label: "Lose weight" },
-  { id: "build-muscle", label: "Build muscle" },
-  { id: "save-time", label: "Save time" },
-  { id: "reduce-waste", label: "Reduce waste" },
+  { id: "balanced",     label: "Eat balanced",   emoji: "⚖️" },
+  { id: "save-money",   label: "Save money",      emoji: "💰" },
+  { id: "lose-weight",  label: "Lose weight",     emoji: "🥗" },
+  { id: "build-muscle", label: "Build muscle",    emoji: "💪" },
+  { id: "save-time",    label: "Save time",       emoji: "⏱️" },
+  { id: "reduce-waste", label: "Reduce waste",    emoji: "🌱" },
 ]
 
 const HEAR_OPTIONS = [
@@ -34,7 +33,33 @@ const HEAR_OPTIONS = [
   "Other",
 ]
 
-// Step components are inline below
+const STEPS = [
+  {
+    image: "/splash-meal-planning.jpg",
+    overline: "Your goal",
+    headline: "What brings\nyou here?",
+    sub: "We'll tailor suggestions around what matters most to you.",
+  },
+  {
+    image: "/splash-healthy-cooking.jpg",
+    overline: "Household",
+    headline: "Cooking for\nhow many?",
+    sub: "We'll scale servings and grocery quantities to match.",
+  },
+  {
+    image: "/splash-grocery-shopping.jpg",
+    overline: "Budget",
+    headline: "Weekly\ngrocery budget",
+    sub: "MealPlan tracks every dollar. Change this anytime.",
+  },
+  {
+    image: "/splash-meal-planning.jpg",
+    overline: "Almost there",
+    headline: "One last\nquestion",
+    sub: "How did you hear about MealPlan?",
+  },
+]
+
 export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
   const [step, setStep] = useState(0)
   const [householdSize, setHouseholdSize] = useState(2)
@@ -43,242 +68,242 @@ export function OnboardingSplash({ onComplete }: OnboardingSplashProps) {
   const [hearAboutUs, setHearAboutUs] = useState("")
 
   const totalSteps = 4
+  const s = STEPS[step]
+  const canContinue = step === 3 ? hearAboutUs !== "" : true
 
   const handleFinish = () => {
     onComplete({ householdSize, weeklyBudget, dietGoal, hearAboutUs })
   }
 
-  const canContinue = () => {
-    if (step === 3) return hearAboutUs !== ""
-    return true
-  }
+  const next = () => step < totalSteps - 1 ? setStep(step + 1) : handleFinish()
+  const back = () => setStep(step - 1)
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col">
-      {/* Progress bar */}
-      <div className="w-full h-[2px] bg-[var(--cream-200)]">
-        <div
-          className="h-full bg-[var(--sage)] transition-all duration-500"
-          style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
-        />
-      </div>
+    <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-hidden">
 
-      {/* Header nav */}
-      <div className="flex items-center justify-between px-5 py-3">
-        {step > 0 ? (
+      {/* Hero image — fills top 38% of screen */}
+      <div className="relative w-full flex-shrink-0" style={{ height: "38svh", minHeight: 220 }}>
+        <Image
+          key={step}
+          src={s.image}
+          alt=""
+          fill
+          className="object-cover"
+          style={{ transition: "opacity 400ms ease" }}
+          priority
+        />
+        {/* Bottom fade */}
+        <div
+          className="absolute inset-x-0 bottom-0 h-24"
+          style={{ background: "linear-gradient(to top, var(--background) 0%, transparent 100%)" }}
+        />
+        {/* Progress dots over image */}
+        <div className="absolute bottom-6 left-0 right-0 flex justify-center gap-1.5">
+          {Array.from({ length: totalSteps }).map((_, i) => (
+            <div
+              key={i}
+              style={{
+                width: i === step ? 20 : 6,
+                height: 6,
+                borderRadius: 9999,
+                background: i === step ? "var(--sage)" : "rgba(255,255,255,0.4)",
+                transition: "all 300ms ease",
+              }}
+            />
+          ))}
+        </div>
+        {/* Back nav */}
+        {step > 0 && (
           <button
-            onClick={() => setStep(step - 1)}
-            className="flex items-center gap-1 text-[var(--stone-600)] hover:text-foreground transition-colors min-h-[44px] px-1"
+            onClick={back}
+            className="absolute top-4 left-4 h-9 w-9 rounded-full flex items-center justify-center"
+            style={{ background: "rgba(44,37,30,0.45)", backdropFilter: "blur(8px)" }}
             aria-label="Go back"
           >
-            <ChevronLeft className="h-4 w-4" />
-            <span className="text-[12px]">Back</span>
+            <ChevronLeft className="h-5 w-5 text-white" />
           </button>
-        ) : (
-          <div />
         )}
-        <span className="font-mono text-[9px] tracking-widest uppercase text-[var(--stone-500)]">
-          {step + 1} / {totalSteps}
-        </span>
-        {step < totalSteps - 1 ? (
+        {/* Skip */}
+        {step < totalSteps - 1 && (
           <button
-            onClick={() => setStep(step + 1)}
-            className="text-[12px] text-[var(--stone-500)] hover:text-foreground min-h-[44px] px-1"
+            onClick={next}
+            className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-white"
+            style={{
+              background: "rgba(44,37,30,0.45)",
+              backdropFilter: "blur(8px)",
+              fontSize: 11,
+              fontFamily: "var(--font-mono)",
+              letterSpacing: "0.1em",
+            }}
           >
-            Skip
+            SKIP
           </button>
-        ) : (
-          <div />
         )}
       </div>
 
-      {/* Step content */}
-      <div className="flex-1 flex flex-col overflow-y-auto px-6 pt-4 pb-4">
+      {/* Text + controls */}
+      <div className="flex-1 flex flex-col px-6 pt-2 pb-6 overflow-y-auto">
 
-        {/* ── Step 0: Goal ── */}
-        {step === 0 && (
-          <div className="flex flex-col gap-6 animate-slide-up">
-            <div>
-              <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2">Your goal</p>
-              <h1 className="font-serif text-[26px] italic text-foreground leading-tight">
-                What brings you here?
-              </h1>
-              <p className="text-[13px] text-[var(--stone-600)] mt-2 leading-relaxed">
-                We'll tailor your meal suggestions around what matters most to you.
-              </p>
-            </div>
-            <div className="relative w-full max-w-[240px] mx-auto aspect-square">
-              <Image
-                src="/splash-meal-planning.jpg"
-                alt="Meal planning"
-                width={240}
-                height={240}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            </div>
+        {/* Heading */}
+        <div className="mb-5">
+          <p className="overline mb-1.5">{s.overline}</p>
+          <h1
+            className="font-serif italic text-foreground"
+            style={{ fontSize: 28, lineHeight: 1.15, whiteSpace: "pre-line", letterSpacing: "-0.01em" }}
+          >
+            {s.headline}
+          </h1>
+          <p className="text-[13px] mt-2 leading-relaxed" style={{ color: "var(--stone-600)" }}>
+            {s.sub}
+          </p>
+        </div>
+
+        {/* Step content */}
+        <div className="flex-1">
+
+          {/* Step 0 — Goal */}
+          {step === 0 && (
             <div className="grid grid-cols-2 gap-2.5">
               {GOALS.map((g) => (
                 <button
                   key={g.id}
                   onClick={() => setDietGoal(g.id)}
-                  className={`py-3 px-3 rounded-xl border-[1.5px] text-[13px] text-left transition-all ${
-                    dietGoal === g.id
-                      ? "bg-[var(--sage-l)] border-[var(--sage)] text-[var(--sage-d)]"
-                      : "bg-card border-[var(--cream-300)] text-foreground hover:border-[var(--cream-400)]"
-                  }`}
+                  className="py-3.5 px-3 rounded-2xl text-left transition-all"
+                  style={{
+                    border: `1.5px solid ${dietGoal === g.id ? "var(--sage)" : "var(--cream-300)"}`,
+                    background: dietGoal === g.id ? "var(--sage-l)" : "var(--card)",
+                    color: dietGoal === g.id ? "var(--sage-d)" : "var(--foreground)",
+                  }}
                 >
-                  {g.label}
+                  <span style={{ fontSize: 20, display: "block", marginBottom: 4 }}>{g.emoji}</span>
+                  <span style={{ fontSize: 13 }}>{g.label}</span>
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── Step 1: Household size ── */}
-        {step === 1 && (
-          <div className="flex flex-col gap-6 animate-slide-up">
-            <div>
-              <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2">Household</p>
-              <h1 className="font-serif text-[26px] italic text-foreground leading-tight">
-                How many people are you cooking for?
-              </h1>
-              <p className="text-[13px] text-[var(--stone-600)] mt-2 leading-relaxed">
-                We'll scale recipe servings and grocery quantities to match.
-              </p>
-            </div>
-            <div className="relative w-full max-w-[240px] mx-auto aspect-square">
-              <Image
-                src="/splash-healthy-cooking.jpg"
-                alt="Cooking for family"
-                width={240}
-                height={240}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            </div>
-            <div className="flex items-center justify-center gap-6 py-4">
+          {/* Step 1 — Household */}
+          {step === 1 && (
+            <div className="flex items-center justify-center gap-8 py-6">
               <button
                 onClick={() => setHouseholdSize(Math.max(1, householdSize - 1))}
-                className="h-12 w-12 rounded-full bg-card border-[1.5px] border-[var(--cream-300)] text-[22px] hover:border-[var(--sage)] hover:bg-[var(--sage-l)] transition-all flex items-center justify-center"
+                className="h-14 w-14 rounded-full flex items-center justify-center transition-all"
+                style={{
+                  border: "1.5px solid var(--cream-300)",
+                  background: "var(--card)",
+                  fontSize: 28,
+                  color: "var(--stone-700)",
+                }}
                 aria-label="Decrease"
-              >
-                −
-              </button>
-              <div className="text-center">
-                <span className="font-serif text-[52px] italic text-foreground leading-none">{householdSize}</span>
-                <p className="font-mono text-[8px] tracking-widest uppercase text-[var(--stone-500)] mt-1">
+              >−</button>
+
+              <div className="text-center min-w-[80px]">
+                <span
+                  className="font-serif italic text-foreground block"
+                  style={{ fontSize: 64, lineHeight: 1 }}
+                >
+                  {householdSize}
+                </span>
+                <span className="overline mt-1 block">
                   {householdSize === 1 ? "person" : "people"}
-                </p>
+                </span>
               </div>
+
               <button
                 onClick={() => setHouseholdSize(Math.min(10, householdSize + 1))}
-                className="h-12 w-12 rounded-full bg-card border-[1.5px] border-[var(--cream-300)] text-[22px] hover:border-[var(--sage)] hover:bg-[var(--sage-l)] transition-all flex items-center justify-center"
+                className="h-14 w-14 rounded-full flex items-center justify-center transition-all"
+                style={{
+                  border: "1.5px solid var(--sage)",
+                  background: "var(--sage-l)",
+                  fontSize: 28,
+                  color: "var(--sage-d)",
+                }}
                 aria-label="Increase"
-              >
-                +
-              </button>
+              >+</button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── Step 2: Weekly budget ── */}
-        {step === 2 && (
-          <div className="flex flex-col gap-6 animate-slide-up">
-            <div>
-              <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2">Budget</p>
-              <h1 className="font-serif text-[26px] italic text-foreground leading-tight">
-                What's your weekly grocery budget?
-              </h1>
-              <p className="text-[13px] text-[var(--stone-600)] mt-2 leading-relaxed">
-                MealPlan tracks every dollar. You can always change this later.
-              </p>
-            </div>
-            <div className="relative w-full max-w-[240px] mx-auto aspect-square">
-              <Image
-                src="/splash-grocery-shopping.jpg"
-                alt="Grocery shopping"
-                width={240}
-                height={240}
-                className="w-full h-full object-cover rounded-2xl"
-              />
-            </div>
+          {/* Step 2 — Budget */}
+          {step === 2 && (
             <div className="space-y-4">
-              <div className="flex items-center gap-3 bg-card border-[1.5px] border-[var(--cream-300)] rounded-xl px-4 h-14 focus-within:border-[var(--sage)] transition-colors">
-                <span className="text-[22px] text-[var(--stone-500)]">$</span>
+              <div
+                className="flex items-center gap-3 rounded-2xl px-4 h-16 transition-colors"
+                style={{ border: "1.5px solid var(--cream-300)", background: "var(--card)" }}
+              >
+                <span style={{ fontSize: 28, color: "var(--stone-400)" }}>$</span>
                 <input
                   type="number"
                   value={weeklyBudget}
                   min={0}
                   max={9999}
                   onChange={(e) => setWeeklyBudget(Math.max(0, parseInt(e.target.value) || 0))}
-                  className="flex-1 bg-transparent text-[22px] text-foreground outline-none"
+                  className="flex-1 bg-transparent outline-none text-foreground"
+                  style={{ fontSize: 28 }}
                   aria-label="Weekly budget"
                 />
-                <span className="font-mono text-[9px] tracking-widest uppercase text-[var(--stone-500)]">/ week</span>
+                <span className="overline">/ week</span>
               </div>
               <div className="grid grid-cols-4 gap-2">
                 {[75, 100, 150, 200].map((preset) => (
                   <button
                     key={preset}
                     onClick={() => setWeeklyBudget(preset)}
-                    className={`py-2 rounded-lg border-[1.5px] text-[12px] transition-all ${
-                      weeklyBudget === preset
-                        ? "bg-[var(--sage-l)] border-[var(--sage)] text-[var(--sage-d)]"
-                        : "bg-card border-[var(--cream-300)] text-[var(--stone-600)] hover:border-[var(--cream-400)]"
-                    }`}
+                    className="py-2.5 rounded-xl transition-all"
+                    style={{
+                      fontSize: 13,
+                      border: `1.5px solid ${weeklyBudget === preset ? "var(--sage)" : "var(--cream-300)"}`,
+                      background: weeklyBudget === preset ? "var(--sage-l)" : "var(--card)",
+                      color: weeklyBudget === preset ? "var(--sage-d)" : "var(--stone-600)",
+                    }}
                   >
                     ${preset}
                   </button>
                 ))}
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── Step 3: Attribution ── */}
-        {step === 3 && (
-          <div className="flex flex-col gap-6 animate-slide-up">
-            <div>
-              <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2">Almost there</p>
-              <h1 className="font-serif text-[26px] italic text-foreground leading-tight">
-                How did you hear about MealPlan?
-              </h1>
-              <p className="text-[13px] text-[var(--stone-600)] mt-2 leading-relaxed">
-                Just one last question — this helps us understand where to invest.
-              </p>
-            </div>
+          {/* Step 3 — Attribution */}
+          {step === 3 && (
             <div className="flex flex-col gap-2">
               {HEAR_OPTIONS.map((opt) => (
                 <button
                   key={opt}
                   onClick={() => setHearAboutUs(opt)}
-                  className={`py-3.5 px-4 rounded-xl border-[1.5px] text-[13px] text-left transition-all ${
-                    hearAboutUs === opt
-                      ? "bg-[var(--sage-l)] border-[var(--sage)] text-[var(--sage-d)]"
-                      : "bg-card border-[var(--cream-300)] text-foreground hover:border-[var(--cream-400)]"
-                  }`}
+                  className="py-4 px-4 rounded-2xl text-left transition-all"
+                  style={{
+                    fontSize: 13,
+                    border: `1.5px solid ${hearAboutUs === opt ? "var(--sage)" : "var(--cream-300)"}`,
+                    background: hearAboutUs === opt ? "var(--sage-l)" : "var(--card)",
+                    color: hearAboutUs === opt ? "var(--sage-d)" : "var(--foreground)",
+                  }}
                 >
                   {opt}
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
-      </div>
-
-      {/* Footer CTA */}
-      <div className="px-6 pb-8 pt-3 border-t border-[var(--cream-200)]">
-        <Button
-          onClick={step < totalSteps - 1 ? () => setStep(step + 1) : handleFinish}
-          disabled={!canContinue()}
-          className="w-full h-12 text-[13px] bg-[var(--sage-d)] hover:bg-[var(--sage)] text-white rounded-xl border-0 transition-all disabled:opacity-40"
+        {/* CTA */}
+        <button
+          onClick={next}
+          disabled={!canContinue}
+          className="w-full h-13 rounded-2xl flex items-center justify-center gap-2 mt-5 transition-all"
+          style={{
+            height: 52,
+            fontSize: 14,
+            background: canContinue ? "var(--sage-d)" : "var(--cream-300)",
+            color: canContinue ? "#fff" : "var(--stone-500)",
+            border: "none",
+          }}
         >
           {step < totalSteps - 1 ? (
-            <span className="flex items-center gap-2">Continue <ChevronRight className="h-4 w-4" /></span>
+            <>Continue <ChevronRight className="h-4 w-4" /></>
           ) : (
             "Start planning"
           )}
-        </Button>
+        </button>
       </div>
     </div>
   )
