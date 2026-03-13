@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import type { PantryItem, DynamicIngredient, Recipe, WeeklyMealPlans } from "@/lib/types"
+import type { PantryItem } from "@/lib/types"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,27 +11,16 @@ import { useLocalStorage } from "@/hooks/use-local-storage"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ingredientPrices } from "@/lib/ingredient-prices"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn } from "@/lib/utils"
-import { SmartRecommendationsCard } from "@/components/smart-recommendations-card"
-import { getUnitsForCategory } from "@/lib/unit-options"
 
 interface PantryInventoryProps {
   onPantryChange?: (items: PantryItem[]) => void
-  availableIngredients?: DynamicIngredient[]
-  recipes?: Recipe[]
-  allMealPlans?: WeeklyMealPlans
-  onSelectRecipe?: (recipe: Recipe) => void
 }
 
-export function PantryInventory({
-  onPantryChange,
-  availableIngredients,
-  recipes,
-  allMealPlans,
-  onSelectRecipe,
-}: PantryInventoryProps) {
+export function PantryInventory({ onPantryChange }: PantryInventoryProps) {
   const [pantryItems, setPantryItems] = useLocalStorage<PantryItem[]>("pantry-inventory", [])
   const [dialogOpen, setDialogOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
@@ -45,17 +34,14 @@ export function PantryInventory({
     lowStockThreshold: "",
   })
 
-  const ingredientsList =
-    availableIngredients ||
-    Object.keys(getUnitsForCategory("pantry")).map((key) => ({
-      value: key,
-      label: key.charAt(0).toUpperCase() + key.slice(1),
-      unit: getUnitsForCategory("pantry")[key],
-      pricePerUnit: 0, // Assuming pricePerUnit is not needed for this example
-    }))
+  const availableIngredients = Object.keys(ingredientPrices).map((key) => ({
+    value: key,
+    label: key.charAt(0).toUpperCase() + key.slice(1),
+    unit: ingredientPrices[key].unit,
+  }))
 
   const handleIngredientSelect = (ingredientKey: string) => {
-    const ingredient = ingredientsList.find((i) => i.value === ingredientKey)
+    const ingredient = availableIngredients.find((i) => i.value === ingredientKey)
     if (ingredient) {
       setNewItem({
         ...newItem,
@@ -138,13 +124,13 @@ export function PantryInventory({
   )
 
   return (
-    <Card className="shadow-md border-0 bg-gradient-to-br from-background to-muted/30">
+    <Card className="shadow-warm-xs border-[var(--cream-300)] bg-card">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="text-xl sm:text-2xl">Pantry</CardTitle>
+          <CardTitle className="font-serif text-[22px] italic text-foreground">Pantry</CardTitle>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
-              <Button size="sm" className="rounded-xl shadow-sm" aria-label="Add pantry item">
+              <Button size="sm" aria-label="Add pantry item">
                 <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 Add Item
               </Button>
@@ -174,7 +160,7 @@ export function PantryInventory({
                         <CommandList>
                           <CommandEmpty>No ingredient found.</CommandEmpty>
                           <CommandGroup>
-                            {ingredientsList.map((ingredient) => (
+                            {availableIngredients.map((ingredient) => (
                               <CommandItem
                                 key={ingredient.value}
                                 value={ingredient.value}
@@ -221,18 +207,13 @@ export function PantryInventory({
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="item-unit">Unit *</Label>
-                    <Select value={newItem.unit} onValueChange={(value) => setNewItem({ ...newItem, unit: value })}>
-                      <SelectTrigger id="item-unit">
-                        <SelectValue placeholder="Select unit" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {getUnitsForCategory(newItem.category).map((unit) => (
-                          <SelectItem key={unit.value} value={unit.value}>
-                            {unit.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      id="item-unit"
+                      value={newItem.unit}
+                      onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })}
+                      placeholder="lbs"
+                      required
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -304,18 +285,6 @@ export function PantryInventory({
         )}
       </CardHeader>
       <CardContent>
-        {pantryItems.length > 0 && recipes && allMealPlans && onSelectRecipe && (
-          <div className="mb-4">
-            <SmartRecommendationsCard
-              recipes={recipes}
-              pantryItems={pantryItems}
-              allMealPlans={allMealPlans}
-              onSelectRecipe={onSelectRecipe}
-              compact={false}
-            />
-          </div>
-        )}
-
         {pantryItems.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             <Package className="h-12 w-12 mx-auto mb-3 opacity-50" aria-hidden="true" />
@@ -337,7 +306,7 @@ export function PantryInventory({
                   {items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center justify-between p-3 rounded-lg shadow-sm bg-gradient-to-br from-background to-muted/20"
+                      className="flex items-center justify-between p-3 rounded-xl bg-card border border-[var(--cream-300)] shadow-warm-xs"
                     >
                       <div className="flex-1">
                         <div className="flex items-center gap-2">

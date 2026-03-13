@@ -1,8 +1,6 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef } from "react"
+import { useState } from "react"
 import type { Recipe, WeeklyMealPlans } from "@/lib/types"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
@@ -12,28 +10,35 @@ import {
   Clock,
   Users,
   Flame,
+  Beef,
+  Wheat,
+  Droplet,
   Sparkles,
   DollarSign,
   AlertCircle,
   TrendingUp,
-  Filter,
-  X,
-  ChevronRight,
 } from "lucide-react"
 import Image from "next/image"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { Separator } from "@/components/ui/separator"
 import { getSuggestedRecipes, wasRecentlyEaten, getMealEatenCount } from "@/lib/meal-utils"
 import { Badge } from "@/components/ui/badge"
-import { useToast } from "@/hooks/use-toast"
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
-import { RecipeDetailSheet } from "@/components/recipe-detail-sheet"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 interface RecipeSelectorSheetProps {
   recipes: Recipe[]
   isOpen: boolean
   onClose: () => void
   onSelectRecipe: (recipe: Recipe) => void
-  onAddRecipeToLibrary?: (recipe: Recipe) => void
   currentMeal?: string
   allMealPlans: WeeklyMealPlans
   weeklyBudget?: number
@@ -44,7 +49,6 @@ export function RecipeSelectorSheet({
   isOpen,
   onClose,
   onSelectRecipe,
-  onAddRecipeToLibrary,
   currentMeal,
   allMealPlans,
   weeklyBudget,
@@ -58,10 +62,6 @@ export function RecipeSelectorSheet({
     recipe: Recipe
     recentInfo: { eaten: boolean; daysAgo?: number }
   } | null>(null)
-  const [showFilters, setShowFilters] = useState(false)
-  const { toast } = useToast()
-  const [selectedRecipeForDetail, setSelectedRecipeForDetail] = useState<Recipe | null>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const categories = ["all", ...Array.from(new Set(recipes.map((r) => r.category)))]
   const diets = ["all", "classic", "low-carb", "keto", "flexitarian", "paleo", "vegetarian", "pescatarian", "vegan"]
@@ -75,44 +75,12 @@ export function RecipeSelectorSheet({
     weeklyBudget,
   )
 
-  const baseRecipes = showSuggestions ? suggestedRecipes : recipes
-
-  const filteredRecipes = baseRecipes.filter((recipe) => {
-    const matchesSearch = !searchQuery.trim() || recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredRecipes = (showSuggestions ? suggestedRecipes : recipes).filter((recipe) => {
+    const matchesSearch = recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = selectedCategory === "all" || recipe.category === selectedCategory
     const matchesDiet = selectedDiet === "all" || recipe.diet === selectedDiet
     return matchesSearch && matchesCategory && matchesDiet
   })
-
-  const suggestionStats = showSuggestions
-    ? {
-        total: suggestedRecipes.length,
-        filtered: filteredRecipes.length,
-        excluded: recipes.length - suggestedRecipes.length,
-      }
-    : null
-
-  const activeFiltersCount =
-    (selectedCategory !== "all" ? 1 : 0) + (selectedDiet !== "all" ? 1 : 0) + (showSuggestions ? 1 : 0)
-
-  console.log("[v0] Filtered recipes count:", filteredRecipes.length)
-  console.log("[v0] Base recipes count:", baseRecipes.length)
-  console.log("[v0] Search query:", searchQuery)
-  const recipesWithFewIngredients = filteredRecipes.filter((r) => r.ingredients.length <= 4)
-  if (recipesWithFewIngredients.length > 0) {
-    console.log("[v0] WARNING: Found", recipesWithFewIngredients.length, "recipes with 4 or fewer ingredients")
-    console.log(
-      "[v0] Sample recipes with few ingredients:",
-      recipesWithFewIngredients.slice(0, 5).map((r) => ({
-        name: r.name,
-        ingredientCount: r.ingredients.length,
-        ingredients: r.ingredients.map((i) => i.name),
-      })),
-    )
-  }
-  if (suggestionStats) {
-    console.log("[v0] Smart suggestions active:", suggestionStats)
-  }
 
   const handleSelectRecipe = (recipe: Recipe) => {
     const recentlyEaten = wasRecentlyEaten(recipe.id, allMealPlans, 3)
@@ -120,10 +88,6 @@ export function RecipeSelectorSheet({
     if (recentlyEaten.eaten) {
       setConfirmRecipe({ recipe, recentInfo: recentlyEaten })
       return
-    }
-
-    if (onAddRecipeToLibrary) {
-      onAddRecipeToLibrary(recipe)
     }
 
     onSelectRecipe(recipe)
@@ -135,10 +99,6 @@ export function RecipeSelectorSheet({
 
   const handleConfirmSelection = () => {
     if (confirmRecipe) {
-      if (onAddRecipeToLibrary) {
-        onAddRecipeToLibrary(confirmRecipe.recipe)
-      }
-
       onSelectRecipe(confirmRecipe.recipe)
       onClose()
       setSearchQuery("")
@@ -156,230 +116,94 @@ export function RecipeSelectorSheet({
     }
   }
 
-  const clearAllFilters = () => {
-    setSelectedCategory("all")
-    setSelectedDiet("all")
-    setShowSuggestions(false)
-    toast({
-      title: "Filters cleared",
-      description: "Showing all recipes",
-    })
-  }
-
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "breakfast":
-        return "bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950 dark:text-amber-300 dark:border-amber-800"
+        return "bg-[var(--wheat-l)] text-[var(--wheat-d)] border-[#e8c87a]"
       case "lunch":
-        return "bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950 dark:text-sky-300 dark:border-sky-800"
+        return "bg-[var(--sky-l)] text-[var(--sky)] border-[#a8c8dc]"
       case "dinner":
-        return "bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-950 dark:text-purple-300 dark:border-purple-800"
+        return "bg-[var(--plum-l)] text-[var(--plum)] border-[#c8a8c8]"
       case "snack":
-        return "bg-green-100 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800"
+        return "bg-[var(--sage-l)] text-[var(--sage-d)] border-[#b8d6ba]"
       default:
-        return "bg-muted text-muted-foreground border-border"
+        return "bg-[var(--cream-100)] text-[var(--stone-600)] border-[var(--cream-300)]"
     }
-  }
-
-  const handleQuickAdd = (recipe: Recipe, e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log("[v0] Quick add clicked for recipe:", recipe.name)
-    handleSelectRecipe(recipe)
-  }
-
-  const handleViewFullRecipe = (recipe: Recipe, e: React.MouseEvent) => {
-    e.stopPropagation()
-    console.log("[v0] View full recipe clicked for:", recipe.name)
-    setSelectedRecipeForDetail(recipe)
   }
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl h-[85vh] p-0 flex flex-col overflow-hidden">
-          <DialogHeader className="px-6 pt-6 pb-4 flex-shrink-0 border-b">
-            <DialogTitle className="text-xl font-semibold">
-              {currentMeal ? `Select ${currentMeal}` : "Select Recipe"}
-            </DialogTitle>
+          <DialogHeader className="px-6 pt-4 pb-2 flex-shrink-0">
+            <DialogTitle className="font-serif text-lg italic text-foreground">{currentMeal ? `Select ${currentMeal}` : "Select Recipe"}</DialogTitle>
           </DialogHeader>
 
-          <div className="px-6 py-3 space-y-3 flex-shrink-0 border-b bg-muted/30">
-            {showSuggestions && suggestionStats && (
-              <div className="bg-primary/10 dark:bg-primary/20 border border-primary/30 rounded-lg p-3 text-sm">
-                <div className="flex items-start gap-2">
-                  <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary animate-pulse" />
-                  <div className="flex-1">
-                    <p className="font-medium text-primary">Smart Suggestions Active</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Showing {suggestionStats.filtered} recipes that you haven't eaten recently
-                      {suggestionStats.excluded > 0 && ` (${suggestionStats.excluded} excluded)`}
-                      {mealType && ` for ${mealType}`}
-                      {weeklyBudget && ` within your budget`}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
+          <div className="px-6 space-y-3 flex-shrink-0">
+            <Button
+              variant={showSuggestions ? "default" : "outline"}
+              size="sm"
+              onClick={() => setShowSuggestions(!showSuggestions)}
+              className="w-full"
+              aria-pressed={showSuggestions}
+            >
+              <Sparkles className="h-4 w-4 mr-2" aria-hidden="true" />
+              {showSuggestions ? "Showing Smart Suggestions" : "Show Smart Suggestions"}
+            </Button>
 
-            <div className="flex gap-2">
-              <div className="relative flex-1">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none"
-                  aria-hidden="true"
-                />
-                <Input
-                  ref={searchInputRef}
-                  placeholder="Search recipes..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-11 rounded-xl border-2 focus:border-primary transition-colors"
-                  aria-label="Search recipes"
-                  inputMode="search"
-                  autoFocus={false}
-                />
-              </div>
-              <Sheet open={showFilters} onOpenChange={setShowFilters}>
-                <SheetTrigger asChild>
-                  <Button size="lg" variant="outline" className="shrink-0 rounded-xl px-4 relative bg-transparent">
-                    <Filter className="h-4 w-4" />
-                    {activeFiltersCount > 0 && (
-                      <span className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-primary text-primary-foreground text-xs flex items-center justify-center font-semibold">
-                        {activeFiltersCount}
-                      </span>
-                    )}
-                  </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="max-h-[75vh] flex flex-col px-6 pb-8">
-                  <SheetHeader className="flex-shrink-0 pb-6 pt-2">
-                    <SheetTitle className="text-xl font-semibold">Filters & Options</SheetTitle>
-                    <SheetDescription className="text-sm">Customize your recipe search</SheetDescription>
-                  </SheetHeader>
-
-                  <div className="flex-1 overflow-y-auto -mx-6 px-6 min-h-0">
-                    <div className="space-y-6 pb-6">
-                      {/* Smart Suggestions */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                          Smart Features
-                        </h3>
-                        <Button
-                          variant={showSuggestions ? "default" : "outline"}
-                          size="lg"
-                          onClick={() => {
-                            const newState = !showSuggestions
-                            setShowSuggestions(newState)
-                            console.log("[v0] Smart suggestions toggled:", newState)
-                            if (newState) {
-                              toast({
-                                title: "Smart Suggestions Enabled",
-                                description: "Showing recipes you haven't eaten recently, sorted by cost",
-                              })
-                            }
-                          }}
-                          className="w-full rounded-xl h-12 justify-start"
-                        >
-                          <Sparkles className={`h-4 w-4 mr-2 ${showSuggestions ? "animate-pulse" : ""}`} />
-                          {showSuggestions ? "Smart Suggestions On" : "Enable Smart Suggestions"}
-                        </Button>
-                      </div>
-
-                      {/* Diet Filters */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                          Diet Type
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {diets.map((diet) => (
-                            <Button
-                              key={diet}
-                              variant={selectedDiet === diet ? "default" : "outline"}
-                              size="lg"
-                              onClick={() => setSelectedDiet(diet)}
-                              className="capitalize rounded-xl h-11 justify-start"
-                            >
-                              {diet}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Category Filters */}
-                      <div className="space-y-3">
-                        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                          Meal Type
-                        </h3>
-                        <div className="grid grid-cols-2 gap-2">
-                          {categories.map((category) => (
-                            <Button
-                              key={category}
-                              variant={selectedCategory === category ? "default" : "outline"}
-                              size="lg"
-                              onClick={() => setSelectedCategory(category)}
-                              className="capitalize rounded-xl h-11 justify-start"
-                            >
-                              {category}
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 pt-6 border-t flex-shrink-0 bg-background">
-                    <Button
-                      variant="outline"
-                      onClick={clearAllFilters}
-                      className="flex-1 rounded-xl h-12 bg-transparent"
-                      disabled={activeFiltersCount === 0}
-                    >
-                      Clear All
-                    </Button>
-                    <Button onClick={() => setShowFilters(false)} className="flex-1 rounded-xl h-12">
-                      Apply Filters
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                aria-hidden="true"
+              />
+              <Input
+                placeholder="Search recipes..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+                aria-label="Search recipes"
+              />
             </div>
 
-            {activeFiltersCount > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs text-muted-foreground">Active filters:</span>
-                {showSuggestions && (
-                  <Badge variant="secondary" className="rounded-full">
-                    <Sparkles className="h-3 w-3 mr-1" />
-                    Smart
-                    <button
-                      onClick={() => setShowSuggestions(false)}
-                      className="ml-1 hover:bg-background/50 rounded-full p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                )}
-                {selectedDiet !== "all" && (
-                  <Badge variant="secondary" className="rounded-full capitalize">
-                    {selectedDiet}
-                    <button
-                      onClick={() => setSelectedDiet("all")}
-                      className="ml-1 hover:bg-background/50 rounded-full p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                )}
-                {selectedCategory !== "all" && (
-                  <Badge variant="secondary" className="rounded-full capitalize">
-                    {selectedCategory}
-                    <button
-                      onClick={() => setSelectedCategory("all")}
-                      className="ml-1 hover:bg-background/50 rounded-full p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                )}
-              </div>
-            )}
+            <div
+              className="flex gap-2 overflow-x-auto pb-2 px-1 hide-scrollbar"
+              role="group"
+              aria-label="Filter by diet"
+            >
+              {diets.map((diet) => (
+                <Button
+                  key={diet}
+                  variant={selectedDiet === diet ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedDiet(diet)}
+                  className="capitalize whitespace-nowrap flex-shrink-0"
+                  aria-pressed={selectedDiet === diet}
+                  aria-label={`Filter by ${diet}`}
+                >
+                  {diet}
+                </Button>
+              ))}
+            </div>
+
+            <div
+              className="flex gap-2 overflow-x-auto pb-2 px-1 hide-scrollbar"
+              role="group"
+              aria-label="Filter by category"
+            >
+              {categories.map((category) => (
+                <Button
+                  key={category}
+                  variant={selectedCategory === category ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedCategory(category)}
+                  className="capitalize whitespace-nowrap flex-shrink-0"
+                  aria-pressed={selectedCategory === category}
+                  aria-label={`Filter by ${category}`}
+                >
+                  {category}
+                </Button>
+              ))}
+            </div>
           </div>
 
           <ScrollArea className="flex-1 px-5 overflow-y-auto">
@@ -392,64 +216,65 @@ export function RecipeSelectorSheet({
                   <div key={recipe.id} className="space-y-2" role="listitem">
                     <button
                       onClick={() => handleRecipeClick(recipe)}
-                      className={`w-full flex gap-3 p-3 rounded-xl border-2 bg-card hover:bg-accent transition-all text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[88px] mx-1 relative ${
-                        previewRecipe?.id === recipe.id ? "ring-2 ring-primary shadow-lg" : "shadow-sm"
+                      className={`w-full flex gap-2.5 p-2.5 rounded-lg border bg-card hover:bg-accent transition-colors text-left focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 min-h-[88px] mx-1 ${
+                        previewRecipe?.id === recipe.id ? "ring-2 ring-primary" : ""
                       } ${recentlyEaten.eaten ? "border-orange-500/50 bg-orange-50/50 dark:bg-orange-950/20" : ""}`}
                       aria-expanded={previewRecipe?.id === recipe.id}
+                      aria-label={`${recipe.name}, ${recipe.diet} ${recipe.category}, ${recipe.prepTime + recipe.cookTime} minutes, ${recipe.servings} servings${recipe.nutrition ? `, ${recipe.nutrition.calories} calories` : ""}${recipe.cost ? `, $${recipe.cost.toFixed(2)} per serving` : ""}. Click to ${previewRecipe?.id === recipe.id ? "collapse" : "expand"} details.`}
                     >
-                      <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl ring-1 ring-border/20">
+                      <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded">
                         <Image
-                          src={recipe.image || "/placeholder.svg?height=80&width=80"}
+                          src={recipe.image || "/placeholder.svg?height=64&width=64"}
                           alt={recipe.name}
                           fill
                           className="object-cover"
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <p className="font-semibold text-base text-balance line-clamp-2">{recipe.name}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="font-medium text-base text-balance line-clamp-2">{recipe.name}</p>
                           {recipe.cost && (
-                            <Badge variant="secondary" className="flex-shrink-0 text-sm rounded-full">
+                            <Badge variant="secondary" className="flex-shrink-0 text-sm">
                               <DollarSign className="h-3 w-3 mr-0.5" aria-hidden="true" />
                               {recipe.cost.toFixed(2)}
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                        <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                           <Badge
                             variant="outline"
-                            className={`text-xs px-2 py-0.5 capitalize rounded-full ${getCategoryColor(recipe.category)}`}
+                            className={`text-xs px-1.5 py-0.5 capitalize ${getCategoryColor(recipe.category)}`}
                           >
                             {recipe.category}
                           </Badge>
-                          <Badge variant="outline" className="text-xs px-2 py-0.5 capitalize rounded-full">
+                          <Badge variant="outline" className="text-xs px-1.5 py-0.5 capitalize">
                             {recipe.diet}
                           </Badge>
                           {recentlyEaten.eaten && (
-                            <Badge variant="destructive" className="text-xs px-2 py-0.5 rounded-full">
+                            <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
                               <AlertCircle className="h-3 w-3 mr-0.5" aria-hidden="true" />
-                              {recentlyEaten.daysAgo === 0 ? "Today" : `${recentlyEaten.daysAgo}d ago`}
+                              {recentlyEaten.daysAgo === 0 ? "Eaten today" : `Eaten ${recentlyEaten.daysAgo}d ago`}
                             </Badge>
                           )}
                           {eatenCount > 0 && (
-                            <Badge variant="secondary" className="text-xs px-2 py-0.5 rounded-full">
+                            <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
                               <TrendingUp className="h-3 w-3 mr-0.5" aria-hidden="true" />
-                              {eatenCount}x
+                              Eaten {eatenCount}x
                             </Badge>
                           )}
                         </div>
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground mt-2">
+                        <div className="flex items-center gap-2.5 text-xs text-muted-foreground mt-1">
                           <div className="flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+                            <Clock className="h-3 w-3" aria-hidden="true" />
                             <span>{recipe.prepTime + recipe.cookTime}m</span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Users className="h-3.5 w-3.5" aria-hidden="true" />
+                            <Users className="h-3 w-3" aria-hidden="true" />
                             <span>{recipe.servings}</span>
                           </div>
                           {recipe.nutrition && (
                             <div className="flex items-center gap-1">
-                              <Flame className="h-3.5 w-3.5" aria-hidden="true" />
+                              <Flame className="h-3 w-3" aria-hidden="true" />
                               <span>{recipe.nutrition.calories} cal</span>
                             </div>
                           )}
@@ -458,78 +283,90 @@ export function RecipeSelectorSheet({
                     </button>
 
                     {previewRecipe?.id === recipe.id && (
-                      <div className="w-full max-w-full p-4 rounded-xl border-2 border-primary/20 bg-accent/50 space-y-4">
-                        <div className="flex flex-col gap-2 w-full">
-                          <Button
-                            onClick={(e) => handleViewFullRecipe(recipe, e)}
-                            variant="outline"
-                            className="w-full rounded-xl h-11 text-base font-semibold"
-                            size="lg"
-                          >
-                            View Full Recipe
-                            <ChevronRight className="h-4 w-4 ml-1" />
-                          </Button>
-                          <Button
-                            onClick={() => {
-                              console.log("[v0] Add button clicked for recipe:", recipe.name)
-                              handleSelectRecipe(recipe)
-                            }}
-                            className="w-full rounded-xl h-11 text-base font-semibold shadow-md hover:shadow-lg transition-all"
-                            size="lg"
-                          >
-                            {currentMeal ? `Add to ${currentMeal}` : "Add to Plan"}
-                          </Button>
-                        </div>
+                      <div
+                        className="border rounded-lg p-3 bg-muted/50 space-y-2.5 animate-in slide-in-from-top-2 max-h-[400px] overflow-y-auto mx-1"
+                        role="region"
+                        aria-label="Recipe details"
+                      >
+                        <Button
+                          onClick={() => handleSelectRecipe(recipe)}
+                          className="w-full sticky top-0 z-10 bg-primary"
+                          size="lg"
+                          aria-label={`Add ${recipe.name} to ${currentMeal || "meal plan"}`}
+                        >
+                          {currentMeal ? `Add to ${currentMeal.split(" ")[0]}` : "Add to Meal Plan"}
+                        </Button>
 
-                        <div className="space-y-3">
+                        <Separator />
+
+                        {recipe.nutrition && (
                           <div>
-                            <h4 className="font-semibold text-sm mb-2">Ingredients ({recipe.ingredients.length})</h4>
-                            <ul className="text-sm space-y-1 text-muted-foreground">
-                              {recipe.ingredients.map((ing, idx) => (
-                                <li key={idx} className="flex items-start gap-2">
-                                  <span className="text-primary mt-0.5">•</span>
-                                  <span>
-                                    {ing.amount} {ing.unit} {ing.name}
-                                  </span>
-                                </li>
+                            <p className="font-mono text-[8px] tracking-[0.14em] uppercase text-[var(--stone-500)] mb-2">Nutrition per serving</p>
+                            <div className="flex bg-card border border-[var(--cream-300)] rounded-lg overflow-hidden">
+                              {[
+                                { val: recipe.nutrition.calories, unit: "kcal", label: "Cal" },
+                                { val: `${recipe.nutrition.protein}g`, unit: "protein", label: "Pro" },
+                                { val: `${recipe.nutrition.carbs}g`, unit: "carbs", label: "Carb" },
+                                { val: `${recipe.nutrition.fat}g`, unit: "fat", label: "Fat" },
+                              ].map((n, i) => (
+                                <div key={n.label} className={`flex-1 py-2 px-2 text-center ${i < 3 ? "border-r border-[var(--cream-200)]" : ""}`}>
+                                  <span className="text-[14px] text-foreground block">{n.val}</span>
+                                  <span className="font-mono text-[7px] tracking-wider uppercase text-[var(--stone-500)]">{n.label}</span>
+                                </div>
                               ))}
-                            </ul>
+                            </div>
                           </div>
+                        )}
+
+                        <Separator />
+
+                        <div>
+                          <p className="text-xs font-medium mb-2">Ingredients</p>
+                          <ul className="text-xs text-muted-foreground space-y-1" aria-label="Recipe ingredients">
+                            {recipe.ingredients.map((ing) => (
+                              <li key={ing.id}>
+                                • {ing.amount} {ing.unit} {ing.name}
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     )}
                   </div>
                 )
               })}
-
-              {filteredRecipes.length === 0 && (
-                <div className="text-center py-16 space-y-4">
-                  <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mx-auto">
-                    <Search className="h-8 w-8 text-muted-foreground/50" />
-                  </div>
-                  <div className="space-y-2">
-                    <p className="text-base font-medium">No recipes found</p>
-                    <p className="text-sm text-muted-foreground">Try adjusting your search or filters</p>
-                  </div>
-                </div>
-              )}
             </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>
 
-      {selectedRecipeForDetail && (
-        <RecipeDetailSheet
-          recipe={selectedRecipeForDetail}
-          isOpen={!!selectedRecipeForDetail}
-          onClose={() => setSelectedRecipeForDetail(null)}
-          onAddToMealPlan={() => {
-            handleSelectRecipe(selectedRecipeForDetail)
-            setSelectedRecipeForDetail(null)
-          }}
-          currentMeal={currentMeal}
-        />
-      )}
+      <AlertDialog open={!!confirmRecipe} onOpenChange={() => setConfirmRecipe(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-orange-500" />
+              Recently Eaten Meal
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <p>
+                You ate <span className="font-semibold">{confirmRecipe?.recipe.name}</span>{" "}
+                {confirmRecipe?.recentInfo.daysAgo === 0
+                  ? "today"
+                  : `${confirmRecipe?.recentInfo.daysAgo} day${confirmRecipe?.recentInfo.daysAgo === 1 ? "" : "s"} ago`}
+                .
+              </p>
+              <p className="text-sm">
+                To maintain variety in your diet, it's recommended to wait at least 3 days before repeating a meal.
+              </p>
+              <p className="text-sm font-medium">Do you still want to add this meal?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Choose Different Meal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmSelection}>Add Anyway</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   )
 }

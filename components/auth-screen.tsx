@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Leaf, Eye, EyeOff } from "lucide-react"
+import { Eye, EyeOff, AlertCircle } from "lucide-react"
+import { validatePasswordStrength, validateEmail, checkRateLimit } from "@/lib/security"
 
 interface AuthScreenProps {
   onComplete: () => void
@@ -19,43 +20,47 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [rateLimitError, setRateLimitError] = useState("")
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    setError(null)
 
-    try {
-      const endpoint = isSignUp ? "/api/auth/signup" : "/api/auth/signin"
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Authentication failed")
-      }
-
-      if (data.token) {
-        localStorage.setItem("auth_token", data.token)
-      }
-
-      onComplete()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An error occurred")
-    } finally {
-      setIsLoading(false)
+    if (!checkRateLimit("auth_attempt", 5, 60000)) {
+      setRateLimitError("Too many attempts. Please try again in 1 minute.")
+      return
     }
+
+    if (!validateEmail(email)) {
+      setEmailError("Please enter a valid email address")
+      return
+    }
+
+    if (isSignUp) {
+      const validation = validatePasswordStrength(password)
+      if (!validation.isValid) {
+        setPasswordError(validation.message)
+        return
+      }
+    }
+
+    // Clear errors
+    setPasswordError("")
+    setEmailError("")
+    setRateLimitError("")
+
+    // TODO: Implement actual authentication with backend
+    onComplete()
   }
 
   const handleSocialLogin = (provider: string) => {
+    if (!checkRateLimit("social_login", 5, 60000)) {
+      setRateLimitError("Too many attempts. Please try again in 1 minute.")
+      return
+    }
+
+    // TODO: Implement social login
     console.log(`Login with ${provider}`)
     onComplete()
   }
@@ -63,24 +68,25 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
   return (
     <div className="fixed inset-0 z-50 bg-background flex flex-col overflow-y-auto">
       <div className="flex-1 flex flex-col items-center justify-center px-6 py-8">
-        {/* Logo */}
-        <div className="mb-8 flex flex-col items-center gap-3">
-          <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-primary via-primary to-primary/90 flex items-center justify-center shadow-lg shadow-primary/20">
-            <Leaf className="w-10 h-10 text-primary-foreground" strokeWidth={1.5} />
-          </div>
-          <span className="text-base text-foreground tracking-tight">MealPlanner</span>
+        {/* Logo — Lora serif italic wordmark */}
+        <div className="mb-8 flex flex-col items-center gap-2">
+          <h1 className="font-serif text-[32px] italic text-foreground">MealPlan</h1>
+          <p className="font-mono text-[8px] tracking-[0.16em] uppercase text-[var(--stone-500)]">
+            Plan smart, eat well
+          </p>
         </div>
 
         {/* Title */}
-        <h1 className="text-2xl text-center text-foreground mb-8 max-w-sm">
+        <p className="text-[17px] text-center text-foreground mb-8 max-w-sm">
           {isSignUp ? "Create your account" : "Sign in to your account"}
-        </h1>
+        </p>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="w-full max-w-sm space-y-5">
-          {error && (
-            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
-              {error}
+          {rateLimitError && (
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
+              <AlertCircle className="h-4 w-4" />
+              <span>{rateLimitError}</span>
             </div>
           )}
 
@@ -94,11 +100,21 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
               type="email"
               placeholder="Enter your email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setEmailError("")
+              }}
               required
-              disabled={isLoading}
               className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground"
+              aria-invalid={!!emailError}
+              aria-describedby={emailError ? "email-error" : undefined}
             />
+            {emailError && (
+              <p id="email-error" className="text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {emailError}
+              </p>
+            )}
           </div>
 
           {/* Password */}
@@ -112,10 +128,15 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
                 type={showPassword ? "text" : "password"}
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value)
+                  setPasswordError("")
+                }}
                 required
-                disabled={isLoading}
+                minLength={8}
                 className="h-12 bg-background border-border text-foreground placeholder:text-muted-foreground pr-12"
+                aria-invalid={!!passwordError}
+                aria-describedby={passwordError ? "password-error" : undefined}
               />
               <button
                 type="button"
@@ -126,6 +147,17 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
+            {passwordError && (
+              <p id="password-error" className="text-sm text-destructive flex items-center gap-1">
+                <AlertCircle className="h-3 w-3" />
+                {passwordError}
+              </p>
+            )}
+            {isSignUp && !passwordError && (
+              <p className="text-xs text-muted-foreground">
+                Must be 8+ characters with uppercase, lowercase, numbers, and special characters
+              </p>
+            )}
             {!isSignUp && (
               <div className="flex justify-end">
                 <button type="button" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
@@ -143,7 +175,6 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
                 checked={agreedToTerms}
                 onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
                 className="mt-1"
-                disabled={isLoading}
               />
               <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed cursor-pointer">
                 I've read and agreed to{" "}
@@ -161,10 +192,10 @@ export function AuthScreen({ onComplete }: AuthScreenProps) {
           {/* Submit button */}
           <Button
             type="submit"
-            className="w-full h-12 bg-primary hover:bg-primary/90 text-primary-foreground text-base shadow-lg shadow-primary/25"
-            disabled={(isSignUp && !agreedToTerms) || isLoading}
+            className="w-full h-12 bg-[var(--sage-d)] hover:bg-[var(--sage)] text-white text-[13px] rounded-lg border-[1.5px] border-[var(--sage-d)] hover:border-[var(--sage)] transition-all"
+            disabled={isSignUp && !agreedToTerms}
           >
-            {isLoading ? "Please wait..." : isSignUp ? "Create Account" : "Sign in"}
+            {isSignUp ? "Create Account" : "Sign in"}
           </Button>
         </form>
 
