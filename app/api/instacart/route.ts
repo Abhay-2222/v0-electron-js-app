@@ -1,7 +1,31 @@
 import { NextResponse } from "next/server"
 
+// Supported units per Instacart docs — anything else falls back to "each"
+const VALID_UNITS = new Set([
+  "each", "package", "tablespoon", "teaspoon", "ounce", "fluid ounce",
+  "pound", "gram", "kilogram", "cup", "pint", "quart", "gallon",
+  "liter", "milliliter", "bunch", "slice", "piece", "clove", "head",
+  "stalk", "sprig", "can", "jar", "bag", "box", "bottle", "container",
+])
+
+function normalizeUnit(unit: string | undefined): string {
+  if (!unit) return "each"
+  const lower = unit.toLowerCase().trim()
+  if (VALID_UNITS.has(lower)) return lower
+  // Common abbreviation mappings
+  const map: Record<string, string> = {
+    tbsp: "tablespoon", tbs: "tablespoon", tsp: "teaspoon",
+    oz: "ounce", "fl oz": "fluid ounce", lb: "pound", lbs: "pound",
+    g: "gram", kg: "kilogram", ml: "milliliter", l: "liter",
+    pkg: "package", pkt: "package", cnt: "each", ct: "each",
+  }
+  return map[lower] ?? "each"
+}
+
 export async function POST(request: Request) {
-  const apiKey = process.env.INSTACART_API_KEY
+  const rawKey = process.env.INSTACART_API_KEY ?? ""
+  // Strip any accidental whitespace or quotes from the env value
+  const apiKey = rawKey.trim().replace(/^["']|["']$/g, "")
 
   if (!apiKey) {
     return NextResponse.json({ error: "Instacart API key not configured" }, { status: 500 })
@@ -14,38 +38,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No items provided" }, { status: 400 })
     }
 
-    // Build line items for the Instacart shopping list page API
     const lineItems = items.map((item: { name: string; amount: number; unit: string }) => ({
-      name: `${item.name}`,
-      quantity: Math.ceil(item.amount),
-      unit: item.unit || undefined,
+      name: String(item.name),
+      quantity: Math.max(1, Math.ceil(Number(item.amount) || 1)),
+      unit: normalizeUnit(item.unit),
     }))
+
+    const body = {
+      title: "My Meal Plan Grocery List",
+      link_type: "shopping_list",
+      line_items: lineItems,
+    }
 
     const response = await fetch("https://connect.instacart.com/idp/v1/products/products_link", {
       method: "POST",
       headers: {
+        "Accept": "application/json",
         "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
       },
-      body: JSON.stringify({
-        title: "My Meal Plan Grocery List",
-        line_items: lineItems,
-      }),
+      body: JSON.stringify(body),
     })
 
+    const responseText = await response.text()
+
     if (!response.ok) {
-      const errorText = await response.text()
-      console.error("[v0] Instacart API error:", response.status, errorText)
-      return NextResponse.json(
-        { error: `Instacart API error: ${response.status}` },
-        { status: response.status }
-      )
+      // Surface a clear message — key likely wrong or not yet activated
+      const hint =
+        response.status === 401
+          ? "Your Instacart API key is invalid or has not been activated. Check the INSTACART_API_KEY environment variable in your Vercel project settings."
+          : `Instacart returned ${response.status}: ${responseText}`
+      return NextResponse.json({ error: hint }, { status: response.status })
     }
 
-    const data = await response.json()
-    return NextResponse.json({ url: data.url ?? data.products_link_url ?? data.link })
+    const data = JSON.parse(responseText)
+    const url = data.products_link_url ?? data.url ?? data.link
+    if (!url) {
+      return NextResponse.json({ error: "Instacart did not return a URL" }, { status: 500 })
+    }
+
+    return NextResponse.json({ url })
   } catch (error) {
-    console.error("[v0] Instacart route error:", error)
     return NextResponse.json({ error: "Failed to create Instacart list" }, { status: 500 })
   }
 }
